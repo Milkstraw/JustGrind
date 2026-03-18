@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Coffee, Grinder, GrindLog, EstimateRequest, EstimateResponse,
-  AddGrindLogRequest, BrewMethod, ProcessingMethod
+  AddGrindLogRequest, BrewMethod, ProcessingMethod,
+  BrewRecipe, CreateBrewRecipeRequest
 } from '../models/models';
 
 const BASE = 'http://localhost:5000/api';
@@ -74,6 +75,32 @@ export class GrindLogService {
 
   create(req: AddGrindLogRequest): Observable<GrindLog> {
     return this.http.post<GrindLog>(`${BASE}/grindlogs`, req);
+  }
+}
+
+// ── Recipe Service ────────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class RecipeService {
+  private http = inject(HttpClient);
+
+  getAll(): Observable<BrewRecipe[]> {
+    return this.http.get<BrewRecipe[]>(`${BASE}/recipes`);
+  }
+
+  getById(id: number): Observable<BrewRecipe> {
+    return this.http.get<BrewRecipe>(`${BASE}/recipes/${id}`);
+  }
+
+  create(req: CreateBrewRecipeRequest): Observable<BrewRecipe> {
+    return this.http.post<BrewRecipe>(`${BASE}/recipes`, req);
+  }
+
+  update(id: number, req: CreateBrewRecipeRequest): Observable<BrewRecipe> {
+    return this.http.put<BrewRecipe>(`${BASE}/recipes/${id}`, req);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/recipes/${id}`);
   }
 }
 
