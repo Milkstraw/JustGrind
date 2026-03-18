@@ -504,5 +504,134 @@ font-weight: anything other than 400 or 700;
 
 ---
 
+## 17. Accessibility
+
+Every component must meet **WCAG 2.1 AA**. The monotone palette already clears contrast (--ink on --paper = ~18:1), but structure and interaction also matter.
+
+### Semantic HTML
+- Use `<button>` for actions, `<a>` for navigation — never `<div>` or `<span>` as click targets
+- Use `<nav>`, `<main>`, `<header>` for major layout regions
+- Table headers must carry `scope="col"` or `scope="row"`
+- Form inputs must have an associated `<label>` — either `<label for="id">` or `aria-label`
+
+### ARIA
+| Pattern | Attribute |
+|---------|-----------|
+| Icon-only buttons | `aria-label="descriptive action"` |
+| Active nav link | `aria-current="page"` |
+| Expandable panel / row | `aria-expanded="true|false"` on the trigger |
+| Live timer / status | `aria-live="polite"` on the container |
+| Disabled state | `aria-disabled="true"` + `disabled` attribute both |
+| Progress bar | `role="progressbar" aria-valuenow aria-valuemin="0" aria-valuemax="100"` |
+| Modal overlay | `role="dialog" aria-modal="true" aria-labelledby="title-id"` |
+
+### Focus
+The global `outline: none` in `styles.scss` removes the browser default — this must be restored for keyboard users:
+```css
+/* Add to styles.scss — keyboard focus ring */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+```
+Do not suppress focus styles on any interactive element. The `:focus-visible` selector keeps it clean for mouse users while restoring it for keyboard navigation.
+
+### Touch Targets
+Minimum interactive area: **44×44px** (WCAG 2.5.5). Apply to any clickable element that would otherwise be smaller:
+```css
+/* Expand hit area without affecting visual size */
+.btn-sm { min-height: 44px; min-width: 44px; }
+```
+The full-size `.btn` already meets this via padding. The `.btn-sm` class (5px/12px padding) must be padded or wrapped to reach 44px on touch devices.
+
+### Form Inputs
+- Never rely on `placeholder` as the only label — it disappears on input
+- `type="number"` inputs on iOS trigger the numeric keyboard as intended
+- `inputmode="decimal"` improves the numeric keyboard for decimal fields on Android
+
+---
+
+## 18. Responsive / Mobile
+
+The app uses a **two-breakpoint model**: mobile-first at `≤ 767px`, desktop at `≥ 768px`.
+
+### Breakpoints
+```css
+/* Applied in component styles or styles.scss media blocks */
+@media (max-width: 767px) { /* mobile */ }
+@media (min-width: 768px) { /* desktop */ }
+```
+
+### Sidebar → Bottom Nav (mobile)
+The desktop sidebar becomes a fixed bottom navigation bar on small screens:
+```css
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    border-right: none;
+    border-top: var(--b-thick);
+    z-index: 50;
+    overflow: hidden;
+  }
+  .sidebar-section { display: none; }
+  .sidebar-item {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 4px;
+    font-size: 9px;
+    text-align: center;
+    border-left: none;
+    border-top: 3px solid transparent;
+  }
+  .sidebar-item.active {
+    border-left: none;
+    border-top: 3px solid var(--ink);
+  }
+  .main { padding-bottom: 72px; } /* clear the bottom nav */
+}
+```
+
+### Grid Stacking
+| Class | Desktop | Mobile |
+|-------|---------|--------|
+| `.stats-row` | 4 columns | 2 columns |
+| `.grid-2` | 2 columns | 1 column |
+| `.form-grid-3` | 3 columns | 1 column |
+| `.form-grid-2` | 2 columns | 1 column |
+
+```css
+@media (max-width: 767px) {
+  .stats-row      { grid-template-columns: 1fr 1fr; }
+  .grid-2         { grid-template-columns: 1fr; }
+  .form-grid-3    { grid-template-columns: 1fr; }
+  .form-grid-2    { grid-template-columns: 1fr; }
+}
+```
+
+### Tables
+All tables must be wrapped in `<div style="overflow-x: auto">` — already enforced in existing components. On mobile this allows horizontal scrolling without breaking layout.
+
+### Font Size
+Body font must be **≥ 16px** inside form inputs to prevent iOS Safari auto-zoom on focus. The global input rule is `font-size: 13px` — override this on mobile:
+```css
+@media (max-width: 767px) {
+  input, textarea, select { font-size: 16px; }
+}
+```
+
+### Touch-Friendly Controls
+- Sliders (`<input type="range">`) use the existing 24px thumb height — sufficient for touch
+- Timer controls (Start/Pause/Reset) on the brew page must be at least 48px tall on mobile — increase padding
+- Row-click expand targets (grind logs) should have `min-height: 48px` per row on mobile
+
+### No Hover-Only Interactions
+Never gate information or actions behind `:hover` alone. Tooltips, menus, and reveal-on-hover patterns are invisible on touch. Use `(click)` toggles or always-visible affordances.
+
+---
+
 *This file is the single source of truth for the Monolith design system.
 Any component not listed here should be derived from these same rules.*

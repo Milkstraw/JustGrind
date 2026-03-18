@@ -102,6 +102,18 @@ GET    /api/estimator/similarity?coffeeAId=&coffeeBId=
 - NGI values should always be stored with 2 decimal places
 - When adding new coffees to seed data, compute NGI via interpolation from the calibration table
 
+### Accessibility & Responsiveness (required on every component)
+All frontend components must follow **WCAG 2.1 AA** and be usable on both desktop and mobile. Full rules are in `STYLE.md` §17–18. The non-negotiable minimums:
+- Use semantic HTML (`<button>`, `<nav>`, `<main>`, `<label>`) — never `<div>`/`<span>` as interactive targets
+- Every interactive element needs an accessible name (`aria-label` for icon-only actions, `<label>` for all inputs)
+- Add `aria-expanded`, `aria-live`, `role="progressbar"` where appropriate (timers, toggles, overlays)
+- Restore focus visibility: `:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }`
+- Minimum touch target size: **44×44px** — pad `.btn-sm` elements on mobile
+- Form inputs must be `font-size: 16px` on mobile to prevent iOS auto-zoom
+- All grids (`.stats-row`, `.grid-2`, `.form-grid-3`) collapse to 1–2 columns on `≤ 767px`
+- Sidebar becomes a fixed bottom nav bar on mobile (see STYLE.md §18)
+- Never use hover-only interactions — all affordances must work on touch
+
 ## Pending / Next Steps
 - Angular Material theme is coffee-brown (`#5d4037`) primary
 - Estimator feedback loop: after user dials in the real setting, call `POST /api/estimator/estimate/{id}/confirm`
