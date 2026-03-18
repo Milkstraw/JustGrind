@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
+import { brewGuard } from './components/recipes/recipe-brew.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -44,6 +45,31 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/grind-logs/grind-logs.component').then(m => m.GrindLogsComponent),
     canActivate: [authGuard],
+  },
+  {
+    path: 'recipes',
+    loadComponent: () =>
+      import('./components/recipes/recipes.component').then(m => m.RecipesComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'recipes/new',
+    loadComponent: () =>
+      import('./components/recipes/recipe-creator.component').then(m => m.RecipeCreatorComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'recipes/:id/edit',
+    loadComponent: () =>
+      import('./components/recipes/recipe-creator.component').then(m => m.RecipeCreatorComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'recipes/:id/brew',
+    loadComponent: () =>
+      import('./components/recipes/recipe-brew.component').then(m => m.RecipeBrewComponent),
+    canActivate: [authGuard],
+    canDeactivate: [brewGuard],
   },
   {
     path: 'login',

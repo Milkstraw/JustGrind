@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<GrinderCalibration> GrinderCalibrations => Set<GrinderCalibration>();
     public DbSet<GrindLog> GrindLogs => Set<GrindLog>();
     public DbSet<BrewRecipe> BrewRecipes => Set<BrewRecipe>();
+    public DbSet<BrewRecipeStep> BrewRecipeSteps => Set<BrewRecipeStep>();
     public DbSet<GrindEstimate> GrindEstimates => Set<GrindEstimate>();
 
     protected override void OnModelCreating(ModelBuilder mb)

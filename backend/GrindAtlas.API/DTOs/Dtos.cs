@@ -39,7 +39,8 @@ public record AddGrindLogRequest(
     decimal? YieldG,
     int? ExtractionTimeS,
     int? Rating,
-    string? Notes
+    string? Notes,
+    int? RecipeId
 );
 
 public record ConfirmEstimateRequest(decimal ConfirmedSetting);
@@ -47,3 +48,18 @@ public record ConfirmEstimateRequest(decimal ConfirmedSetting);
 public record RegisterRequest(string Email, string Password, string? DisplayName);
 public record LoginRequest(string Email, string Password);
 public record AuthResponse(string Token, string Email, string? DisplayName);
+
+public record BrewRecipeStepRequest(int StepOrder, string Instruction, int DurationS, decimal? PourWaterG);
+
+public record CreateBrewRecipeRequest(
+    string Name,
+    int CoffeeId,
+    int GrinderId,
+    BrewMethod BrewMethod,
+    decimal? NativeSetting,
+    decimal? DoseG,
+    decimal? WaterG,
+    decimal? WaterTempC,
+    string? TechniqueNotes,
+    List<BrewRecipeStepRequest> Steps
+);

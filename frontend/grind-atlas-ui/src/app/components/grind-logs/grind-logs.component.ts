@@ -98,12 +98,13 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
     </div>
 
     <!-- Logs table -->
-    <div class="section-label">{{ logs.length }} logs</div>
+    <div class="section-label">{{ logs.length }} log{{ logs.length !== 1 ? 's' : '' }} — click a row to see notes</div>
     <div class="panel">
       <div style="overflow-x: auto;">
         <table class="table" style="min-width: 800px;">
           <thead>
             <tr>
+              <th></th>
               <th>Coffee</th>
               <th>Grinder</th>
               <th>Method</th>
@@ -111,22 +112,62 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
               <th>NGI</th>
               <th>Dose</th>
               <th>Rating</th>
-              <th>Notes</th>
+              <th>Source</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let l of logs">
-              <td><strong>{{ l.coffee?.name ?? 'Coffee #' + l.coffeeId }}</strong></td>
-              <td>{{ l.grinder?.brand ?? '' }} {{ l.grinder?.model ?? '#' + l.grinderId }}</td>
-              <td>{{ formatMethod(l.brewMethod) }}</td>
-              <td><strong>{{ formatSetting(l) }}</strong></td>
-              <td><span class="status-pill s-hold">{{ l.ngiNormalized }}</span></td>
-              <td>{{ l.doseG ? l.doseG + 'g' : '—' }}</td>
-              <td>{{ l.rating ?? '—' }}</td>
-              <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#666;">{{ l.notes || '—' }}</td>
-            </tr>
+            <ng-container *ngFor="let l of logs">
+              <tr (click)="toggleExpand(l.id)" style="cursor:pointer;">
+                <td style="width:24px; padding:9px 8px;">
+                  <span style="font-size:10px; color:#999;">{{ expandedLogId === l.id ? '▼' : '▶' }}</span>
+                </td>
+                <td><strong>{{ l.coffee?.name ?? 'Coffee #' + l.coffeeId }}</strong></td>
+                <td>{{ l.grinder?.brand ?? '' }} {{ l.grinder?.model ?? '#' + l.grinderId }}</td>
+                <td>{{ formatMethod(l.brewMethod) }}</td>
+                <td><strong>{{ formatSetting(l) }}</strong></td>
+                <td><span class="status-pill s-hold">{{ l.ngiNormalized }}</span></td>
+                <td>{{ l.doseG ? l.doseG + 'g' : '—' }}</td>
+                <td>{{ l.rating ?? '—' }}</td>
+                <td>
+                  <span *ngIf="l.recipeId" class="status-pill s-active" style="font-size:9px;">Recipe</span>
+                  <span *ngIf="!l.recipeId" class="status-pill s-done" style="font-size:9px;">Quick Log</span>
+                </td>
+              </tr>
+              <!-- Expanded notes panel -->
+              <tr *ngIf="expandedLogId === l.id">
+                <td colspan="9" style="background:var(--paper); padding:0;">
+                  <div style="padding:14px 18px; border-left:4px solid var(--ink); font-size:13px;">
+                    <div style="display:flex; gap:32px; flex-wrap:wrap; margin-bottom:10px;">
+                      <div>
+                        <span class="form-label">Brew Date</span>
+                        <div>{{ l.brewDate ? formatDate(l.brewDate) : formatDate(l.createdAt) }}</div>
+                      </div>
+                      <div>
+                        <span class="form-label">Source</span>
+                        <div *ngIf="l.recipe"><strong>Recipe:</strong> {{ l.recipe.name }}</div>
+                        <div *ngIf="!l.recipe">Quick Log</div>
+                      </div>
+                      <div *ngIf="l.yieldG">
+                        <span class="form-label">Yield</span>
+                        <div>{{ l.yieldG }}g</div>
+                      </div>
+                      <div *ngIf="l.extractionTimeS">
+                        <span class="form-label">Extraction Time</span>
+                        <div>{{ l.extractionTimeS }}s</div>
+                      </div>
+                    </div>
+                    <div>
+                      <span class="form-label">Notes</span>
+                      <div style="margin-top:4px; color:{{ l.notes ? 'var(--ink)' : '#999' }};">
+                        {{ l.notes || 'No notes recorded.' }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
             <tr *ngIf="logs.length === 0">
-              <td colspan="8" style="text-align:center; color:#999; padding:20px;">No logs yet.</td>
+              <td colspan="9" style="text-align:center; color:#999; padding:20px;">No logs yet.</td>
             </tr>
           </tbody>
         </table>
@@ -144,6 +185,7 @@ export class GrindLogsComponent implements OnInit {
   logs: GrindLog[]    = [];
 
   showForm = false;
+  expandedLogId: number | null = null;
   brewMethods = Object.entries(BREW_METHOD_LABELS).map(([value, label]) => ({ value: value as BrewMethod, label }));
   newLog: Partial<AddGrindLogRequest> = {};
 
@@ -190,6 +232,10 @@ export class GrindLogsComponent implements OnInit {
     this.logService.getAll().subscribe(l => this.logs = l);
   }
 
+  toggleExpand(id: number) {
+    this.expandedLogId = this.expandedLogId === id ? null : id;
+  }
+
   submitLog() {
     if (!this.canSubmit) return;
     this.logService.create(this.newLog as AddGrindLogRequest).subscribe(log => {
@@ -203,6 +249,10 @@ export class GrindLogsComponent implements OnInit {
 
   formatMethod(m: string): string {
     return BREW_METHOD_LABELS[m as BrewMethod] ?? m;
+  }
+
+  formatDate(d: string): string {
+    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   formatBound(v: number): string {

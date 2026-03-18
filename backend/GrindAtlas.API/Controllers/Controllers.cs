@@ -103,6 +103,7 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
         var q = ctx.GrindLogs
             .Include(l => l.Coffee)
             .Include(l => l.Grinder)
+            .Include(l => l.Recipe)
             .Where(l => l.UserId == userId)
             .AsQueryable();
         if (coffeeId.HasValue)  q = q.Where(l => l.CoffeeId == coffeeId.Value);
@@ -114,6 +115,7 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
     public IActionResult Create(AddGrindLogRequest req)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
         var ngi = estimator.NativeToNgi(req.NativeSetting, req.GrinderId);
         var log = new GrindLog
         {
@@ -126,7 +128,8 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
             YieldG           = req.YieldG,
             ExtractionTimeS  = req.ExtractionTimeS,
             Rating           = req.Rating,
-            Notes            = req.Notes,
+            Notes            = notes,
+            RecipeId         = req.RecipeId,
             BrewDate         = DateOnly.FromDateTime(DateTime.UtcNow),
             CreatedAt        = DateTime.UtcNow,
             UserId           = userId,
@@ -134,6 +137,114 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
         ctx.GrindLogs.Add(log);
         ctx.SaveChanges();
         return Ok(log);
+    }
+}
+
+// ── Recipes ───────────────────────────────────────────────────────────────────
+[ApiController, Route("api/[controller]")]
+public class RecipesController(AppDbContext ctx) : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetAll() =>
+        Ok(ctx.BrewRecipes
+            .Include(r => r.Coffee)
+            .Include(r => r.Grinder)
+            .Include(r => r.Steps.OrderBy(s => s.StepOrder))
+            .OrderByDescending(r => r.CreatedAt)
+            .ToList());
+
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+    {
+        var recipe = ctx.BrewRecipes
+            .Include(r => r.Coffee)
+            .Include(r => r.Grinder)
+            .Include(r => r.Steps.OrderBy(s => s.StepOrder))
+            .FirstOrDefault(r => r.Id == id);
+        return recipe is null ? NotFound() : Ok(recipe);
+    }
+
+    [HttpPost]
+    public IActionResult Create(CreateBrewRecipeRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Recipe name is required.");
+        if (req.Steps == null || req.Steps.Count == 0)
+            return BadRequest("A recipe must have at least one step.");
+
+        var recipe = new BrewRecipe
+        {
+            Name           = req.Name.Trim(),
+            CoffeeId       = req.CoffeeId,
+            GrinderId      = req.GrinderId,
+            BrewMethod     = req.BrewMethod,
+            NativeSetting  = req.NativeSetting,
+            DoseG          = req.DoseG,
+            WaterG         = req.WaterG,
+            WaterTempC     = req.WaterTempC,
+            TechniqueNotes = req.TechniqueNotes?.Trim(),
+            CreatedAt      = DateTime.UtcNow,
+            Steps          = req.Steps.Select(s => new BrewRecipeStep
+            {
+                StepOrder   = s.StepOrder,
+                Instruction = s.Instruction,
+                DurationS   = s.DurationS,
+                PourWaterG  = s.PourWaterG,
+            }).ToList(),
+        };
+        ctx.BrewRecipes.Add(recipe);
+        ctx.SaveChanges();
+        return CreatedAtAction(nameof(Get), new { id = recipe.Id }, recipe);
+    }
+
+    [HttpPut("{id}")]
+    public IActionResult Update(int id, CreateBrewRecipeRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest("Recipe name is required.");
+        if (req.Steps == null || req.Steps.Count == 0)
+            return BadRequest("A recipe must have at least one step.");
+
+        var recipe = ctx.BrewRecipes
+            .Include(r => r.Steps)
+            .FirstOrDefault(r => r.Id == id);
+        if (recipe is null) return NotFound();
+
+        recipe.Name           = req.Name.Trim();
+        recipe.CoffeeId       = req.CoffeeId;
+        recipe.GrinderId      = req.GrinderId;
+        recipe.BrewMethod     = req.BrewMethod;
+        recipe.NativeSetting  = req.NativeSetting;
+        recipe.DoseG          = req.DoseG;
+        recipe.WaterG         = req.WaterG;
+        recipe.WaterTempC     = req.WaterTempC;
+        recipe.TechniqueNotes = req.TechniqueNotes?.Trim();
+
+        ctx.BrewRecipeSteps.RemoveRange(recipe.Steps);
+        recipe.Steps = req.Steps.Select(s => new BrewRecipeStep
+        {
+            RecipeId    = id,
+            StepOrder   = s.StepOrder,
+            Instruction = s.Instruction,
+            DurationS   = s.DurationS,
+            PourWaterG  = s.PourWaterG,
+        }).ToList();
+
+        ctx.SaveChanges();
+        return Ok(recipe);
+    }
+
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
+    {
+        var recipe = ctx.BrewRecipes
+            .Include(r => r.Steps)
+            .FirstOrDefault(r => r.Id == id);
+        if (recipe is null) return NotFound();
+        ctx.BrewRecipeSteps.RemoveRange(recipe.Steps);
+        ctx.BrewRecipes.Remove(recipe);
+        ctx.SaveChanges();
+        return NoContent();
     }
 }
 

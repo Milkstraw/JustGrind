@@ -5,6 +5,7 @@ import {
   Coffee, Grinder, GrindLog, EstimateRequest, EstimateResponse,
   AddGrindLogRequest, BrewMethod, ProcessingMethod,
   AuthUser, LoginRequest, RegisterRequest,
+  BrewRecipe, CreateBrewRecipeRequest,
 } from '../models/models';
 
 const BASE = 'http://localhost:5000/api';
@@ -113,6 +114,32 @@ export class AuthService {
   private persist(user: AuthUser): void {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
     this._user.set(user);
+  }
+}
+
+// ── Recipe Service ────────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class RecipeService {
+  private http = inject(HttpClient);
+
+  getAll(): Observable<BrewRecipe[]> {
+    return this.http.get<BrewRecipe[]>(`${BASE}/recipes`);
+  }
+
+  getById(id: number): Observable<BrewRecipe> {
+    return this.http.get<BrewRecipe>(`${BASE}/recipes/${id}`);
+  }
+
+  create(req: CreateBrewRecipeRequest): Observable<BrewRecipe> {
+    return this.http.post<BrewRecipe>(`${BASE}/recipes`, req);
+  }
+
+  update(id: number, req: CreateBrewRecipeRequest): Observable<BrewRecipe> {
+    return this.http.put<BrewRecipe>(`${BASE}/recipes/${id}`, req);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/recipes/${id}`);
   }
 }
 

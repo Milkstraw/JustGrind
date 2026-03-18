@@ -25,9 +25,10 @@ import { AuthService } from './services/services';
           <div class="sidebar-section">Navigation</div>
           <a class="sidebar-item" routerLink="/home"      routerLinkActive="active">Home</a>
           <a class="sidebar-item" routerLink="/estimator" routerLinkActive="active">Estimator</a>
-          <a class="sidebar-item" routerLink="/coffees"   routerLinkActive="active">Coffees</a>
-          <a class="sidebar-item" routerLink="/grinders"  routerLinkActive="active">Grinders</a>
-          <a class="sidebar-item" routerLink="/logs" routerLinkActive="active">My Logs</a>
+          <a class="sidebar-item" routerLink="/coffees"  routerLinkActive="active">Coffees</a>
+          <a class="sidebar-item" routerLink="/grinders" routerLinkActive="active">Grinders</a>
+          <a class="sidebar-item" routerLink="/logs"     routerLinkActive="active">My Logs</a>
+          <a class="sidebar-item" routerLink="/recipes"  routerLinkActive="active">Recipes</a>
         </nav>
         <main class="main">
           <router-outlet />

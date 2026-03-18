@@ -70,8 +70,10 @@ export interface GrindLog {
   notes?: string;
   brewDate?: string;
   createdAt: string;
+  recipeId?: number;
   coffee?: Coffee;
   grinder?: Grinder;
+  recipe?: BrewRecipe;
 }
 
 export type BrewMethod =
@@ -89,6 +91,53 @@ export const BREW_METHOD_LABELS: Record<BrewMethod, string> = {
   ColdBrew: 'Cold Brew',
   Siphon: 'Siphon',
 };
+
+// brew-recipe.model.ts
+export interface BrewRecipeStep {
+  id: number;
+  recipeId: number;
+  stepOrder: number;
+  instruction: string;
+  durationS: number;
+  pourWaterG?: number;
+}
+
+export interface BrewRecipe {
+  id: number;
+  name: string;
+  coffeeId: number;
+  grinderId: number;
+  brewMethod: BrewMethod;
+  nativeSetting?: number;
+  doseG?: number;
+  waterG?: number;
+  waterTempC?: number;
+  techniqueNotes?: string;
+  rating?: number;
+  isFavorite: boolean;
+  steps: BrewRecipeStep[];
+  createdAt: string;
+  coffee?: Coffee;
+  grinder?: Grinder;
+}
+
+export interface CreateBrewRecipeRequest {
+  name: string;
+  coffeeId: number;
+  grinderId: number;
+  brewMethod: BrewMethod;
+  nativeSetting?: number;
+  doseG?: number;
+  waterG?: number;
+  waterTempC?: number;
+  techniqueNotes?: string;
+  steps: {
+    stepOrder: number;
+    instruction: string;
+    durationS: number;
+    pourWaterG?: number;
+  }[];
+}
 
 // estimate.model.ts
 export interface EstimateRequest {
@@ -123,6 +172,7 @@ export interface AddGrindLogRequest {
   extractionTimeS?: number;
   rating?: number;
   notes?: string;
+  recipeId?: number;
 }
 
 // auth
