@@ -15,6 +15,7 @@ public class GrindEstimate
     public decimal? UserConfirmedSetting { get; set; }
     public decimal? AccuracyDelta { get; set; }    // estimated - confirmed
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? UserId { get; set; }
 
     public Coffee Coffee { get; set; } = null!;
     public Grinder TargetGrinder { get; set; } = null!;

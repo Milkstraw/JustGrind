@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -11,6 +12,7 @@ export const routes: Routes = [
     path: 'estimator',
     loadComponent: () =>
       import('./components/estimator/estimator.component').then(m => m.EstimatorComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'coffees',
@@ -36,6 +38,17 @@ export const routes: Routes = [
     path: 'logs',
     loadComponent: () =>
       import('./components/grind-logs/grind-logs.component').then(m => m.GrindLogsComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./components/auth/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./components/auth/register.component').then(m => m.RegisterComponent),
   },
   { path: '**', redirectTo: 'home' },
 ];

@@ -16,9 +16,11 @@ public class GrindLog
     public string? Notes { get; set; }
     public DateOnly? BrewDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? UserId { get; set; }
 
     public Coffee Coffee { get; set; } = null!;
     public Grinder Grinder { get; set; } = null!;
+    public ApplicationUser? User { get; set; }
 }
 
 public class BrewRecipe

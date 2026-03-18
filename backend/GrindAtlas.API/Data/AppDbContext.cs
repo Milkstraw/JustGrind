@@ -1,9 +1,10 @@
 using GrindAtlas.API.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GrindAtlas.API.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Coffee> Coffees => Set<Coffee>();
     public DbSet<Grinder> Grinders => Set<Grinder>();
@@ -14,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
+        base.OnModelCreating(mb); // required for Identity tables
         mb.Entity<Coffee>().Property(c => c.RoastLevel).HasPrecision(3, 1);
         mb.Entity<GrindLog>().Property(l => l.NgiNormalized).HasPrecision(5, 2);
         mb.Entity<GrindLog>().Property(l => l.NativeSetting).HasPrecision(6, 2);

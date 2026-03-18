@@ -1,9 +1,10 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import {
   Coffee, Grinder, GrindLog, EstimateRequest, EstimateResponse,
-  AddGrindLogRequest, BrewMethod, ProcessingMethod
+  AddGrindLogRequest, BrewMethod, ProcessingMethod,
+  AuthUser, LoginRequest, RegisterRequest,
 } from '../models/models';
 
 const BASE = 'http://localhost:5000/api';
@@ -74,6 +75,44 @@ export class GrindLogService {
 
   create(req: AddGrindLogRequest): Observable<GrindLog> {
     return this.http.post<GrindLog>(`${BASE}/grindlogs`, req);
+  }
+}
+
+// ── Auth Service ──────────────────────────────────────────────────────────────
+const AUTH_KEY = 'grindatlas_user';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private http = inject(HttpClient);
+
+  private _user = signal<AuthUser | null>(
+    JSON.parse(localStorage.getItem(AUTH_KEY) ?? 'null')
+  );
+
+  readonly currentUser = this._user.asReadonly();
+  readonly isLoggedIn = computed(() => this._user() !== null);
+  readonly token = computed(() => this._user()?.token ?? null);
+
+  login(req: LoginRequest): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${BASE}/auth/login`, req).pipe(
+      tap(user => this.persist(user))
+    );
+  }
+
+  register(req: RegisterRequest): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${BASE}/auth/register`, req).pipe(
+      tap(user => this.persist(user))
+    );
+  }
+
+  logout(): void {
+    localStorage.removeItem(AUTH_KEY);
+    this._user.set(null);
+  }
+
+  private persist(user: AuthUser): void {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    this._user.set(user);
   }
 }
 

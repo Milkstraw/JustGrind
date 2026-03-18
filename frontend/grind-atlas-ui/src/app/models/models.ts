@@ -124,3 +124,21 @@ export interface AddGrindLogRequest {
   rating?: number;
   notes?: string;
 }
+
+// auth
+export interface AuthUser {
+  email: string;
+  displayName?: string | null;
+  token: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName?: string;
+}
