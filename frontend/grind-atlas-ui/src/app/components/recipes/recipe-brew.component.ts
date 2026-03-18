@@ -138,8 +138,7 @@ export const brewGuard: CanDeactivateFn<RecipeBrewComponent> = (component) => {
                     </span>
                   </div>
                   <div class="bar-track">
-                    <div class="bar-fill" [style.width.%]="stepProgress"
-                      style="transition: width 0.9s linear;"></div>
+                    <div class="bar-fill" [style.width.%]="stepProgress"></div>
                   </div>
                 </div>
               </div>
@@ -216,10 +215,12 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
   isRunning  = false;
   isPaused   = false;
   isComplete = false;
-  elapsedTotal     = 0;
+  elapsedMs        = 0;  // total milliseconds since start
+  stepElapsedMs    = 0;  // milliseconds elapsed in current step
   currentStepIndex = 0;
-  stepElapsed      = 0;
   private timerHandle?: ReturnType<typeof setInterval>;
+
+  get elapsedTotal(): number { return Math.floor(this.elapsedMs / 1000); }
 
   // Review form
   review: { doseG?: number; yieldG?: number; extractionTimeS?: number; rating?: number; notes?: string } = {};
@@ -227,13 +228,13 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
 
   get stepRemaining(): number {
     const s = this.recipe?.steps[this.currentStepIndex];
-    return s ? Math.max(0, s.durationS - this.stepElapsed) : 0;
+    return s ? Math.max(0, Math.ceil((s.durationS * 1000 - this.stepElapsedMs) / 1000)) : 0;
   }
 
   get stepProgress(): number {
     const s = this.recipe?.steps[this.currentStepIndex];
     if (!s || s.durationS === 0) return 100;
-    return Math.min(100, (this.stepElapsed / s.durationS) * 100);
+    return Math.min(100, (this.stepElapsedMs / (s.durationS * 1000)) * 100);
   }
 
   get canSaveReview(): boolean {
@@ -268,7 +269,7 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
     this.isStarted = true;
     this.isRunning = true;
     this.isPaused  = false;
-    this.timerHandle = setInterval(() => this.tick(), 1000);
+    this.timerHandle = setInterval(() => this.tick(), 100);
   }
 
   pause() {
@@ -279,24 +280,24 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
 
   reset() {
     this.stopTimer();
-    this.isStarted       = false;
-    this.isRunning       = false;
-    this.isPaused        = false;
-    this.isComplete      = false;
-    this.elapsedTotal    = 0;
+    this.isStarted        = false;
+    this.isRunning        = false;
+    this.isPaused         = false;
+    this.isComplete       = false;
+    this.elapsedMs        = 0;
+    this.stepElapsedMs    = 0;
     this.currentStepIndex = 0;
-    this.stepElapsed     = 0;
   }
 
   private tick() {
     if (!this.recipe) return;
-    this.elapsedTotal++;
-    this.stepElapsed++;
+    this.elapsedMs     += 100;
+    this.stepElapsedMs += 100;
     const step = this.recipe.steps[this.currentStepIndex];
-    if (step && this.stepElapsed >= step.durationS) {
+    if (step && this.stepElapsedMs >= step.durationS * 1000) {
       if (this.currentStepIndex < this.recipe.steps.length - 1) {
         this.currentStepIndex++;
-        this.stepElapsed = 0;
+        this.stepElapsedMs = 0;
       } else {
         this.stopTimer();
         this.isRunning  = false;
