@@ -3,7 +3,11 @@ import { authGuard } from './auth.guard';
 import { brewGuard } from './components/recipes/recipe-brew.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/landing/landing.component').then(m => m.LandingComponent),
+  },
   {
     path: 'home',
     loadComponent: () =>
@@ -11,9 +15,9 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'estimator',
+    path: 'grind-advisor',
     loadComponent: () =>
-      import('./components/estimator/estimator.component').then(m => m.EstimatorComponent),
+      import('./components/grind-advisor/grind-advisor.component').then(m => m.GrindAdvisorComponent),
     canActivate: [authGuard],
   },
   {
@@ -81,5 +85,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/auth/register.component').then(m => m.RegisterComponent),
   },
-  { path: '**', redirectTo: 'login' },
+  {
+    path: 'not-found',
+    loadComponent: () =>
+      import('./components/not-found/not-found.component').then(m => m.NotFoundComponent),
+  },
+  { path: '**', redirectTo: 'not-found' },
 ];

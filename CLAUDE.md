@@ -40,9 +40,9 @@ open http://localhost:5000/swagger
 | File | Purpose |
 |------|---------|
 | `src/app/models/models.ts` | All TypeScript interfaces and enums |
-| `src/app/services/services.ts` | CoffeeService, GrinderService, GrindLogService, EstimatorService |
+| `src/app/services/services.ts` | CoffeeService, GrinderService, GrindLogService, GrindAdvisorService |
 | `src/app/app.routes.ts` | Lazy-loaded routes |
-| `src/app/components/estimator/` | Main estimator UI — the flagship feature |
+| `src/app/components/grind-advisor/` | Main Grind Advisor UI — the flagship feature |
 | `src/app/components/coffees/` | Coffee catalog with filters |
 | `src/app/components/grinders/` | Grinder catalog with NGI calibration table |
 | `src/app/components/grind-logs/` | Log list + add-log form |
@@ -59,7 +59,7 @@ A 0–100 internal scale that bridges all grinder native settings.
 
 Conversion between NGI and native settings uses linear interpolation over the `grinder_calibrations` anchor points in `GrindEstimatorService.NgiToNative()` and `NativeToNgi()`.
 
-### Estimator — 4-Layer Inference Pipeline
+### Grind Advisor — 4-Layer Inference Pipeline
 Located in `Services/GrindEstimatorService.cs`:
 1. **Layer 1** — Direct hit: exact coffee + grinder + brew method in logs. Confidence: ~0.95
 2. **Layer 2** — Cross-grinder: same coffee on other grinders, bridged via NGI. Confidence: ~0.82
@@ -89,9 +89,9 @@ GET    /api/grinders/{id}/calibrations
 GET    /api/grindlogs?coffeeId=&grinderId=
 POST   /api/grindlogs
 
-POST   /api/estimator/estimate        { coffeeId, targetGrinderId, brewMethod }
-POST   /api/estimator/estimate/{id}/confirm  { confirmedSetting }
-GET    /api/estimator/similarity?coffeeAId=&coffeeBId=
+POST   /api/grind-advisor/estimate        { coffeeId, targetGrinderId, brewMethod }
+POST   /api/grind-advisor/estimate/{id}/confirm  { confirmedSetting }
+GET    /api/grind-advisor/similarity?coffeeAId=&coffeeBId=
 ```
 
 ## Conventions
@@ -104,7 +104,7 @@ GET    /api/estimator/similarity?coffeeAId=&coffeeBId=
 
 ## Pending / Next Steps
 - Angular Material theme is coffee-brown (`#5d4037`) primary
-- Estimator feedback loop: after user dials in the real setting, call `POST /api/estimator/estimate/{id}/confirm`
+- Grind Advisor feedback loop: after user dials in the real setting, call `POST /api/grind-advisor/estimate/{id}/confirm`
 - Add a similarity explorer page (compare any two coffees side-by-side)
 - Add brew recipe CRUD (the BrewRecipe model is seeded but no UI exists yet)
 - Consider adding Chart.js for NGI distribution visualization on the grinder detail page

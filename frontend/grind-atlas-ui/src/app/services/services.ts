@@ -143,13 +143,13 @@ export class RecipeService {
   }
 }
 
-// ── Estimator Service ─────────────────────────────────────────────────────────
+// ── Grind Advisor Service ─────────────────────────────────────────────────────
 @Injectable({ providedIn: 'root' })
-export class EstimatorService {
+export class GrindAdvisorService {
   private http = inject(HttpClient);
 
   estimate(req: EstimateRequest): Observable<EstimateResponse> {
-    return this.http.post<EstimateResponse>(`${BASE}/estimator/estimate`, req);
+    return this.http.post<EstimateResponse>(`${BASE}/grind-advisor/estimate`, req);
   }
 
   getSimilarity(coffeeAId: number, coffeeBId: number): Observable<{
@@ -158,11 +158,11 @@ export class EstimatorService {
     const params = new HttpParams()
       .set('coffeeAId', coffeeAId)
       .set('coffeeBId', coffeeBId);
-    return this.http.get<any>(`${BASE}/estimator/similarity`, { params });
+    return this.http.get<any>(`${BASE}/grind-advisor/similarity`, { params });
   }
 
   confirmEstimate(estimateId: number, confirmedSetting: number): Observable<any> {
-    return this.http.post(`${BASE}/estimator/estimate/${estimateId}/confirm`, {
+    return this.http.post(`${BASE}/grind-advisor/estimate/${estimateId}/confirm`, {
       confirmedSetting,
     });
   }

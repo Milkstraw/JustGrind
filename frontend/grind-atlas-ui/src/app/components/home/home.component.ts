@@ -61,12 +61,12 @@ import { CoffeeService, GrinderService, GrindLogService, RecipeService } from '.
 
       <div class="panel">
         <div class="panel-head">
-          <span class="panel-title">Estimator</span>
+          <span class="panel-title">Grind Advisor</span>
         </div>
         <div class="panel-body">
           <p style="font-size:12px; margin: 0 0 14px; color:#555;">Get a recommended grind setting for any coffee and grinder combination.</p>
           <div style="display:flex; gap:10px;">
-            <a routerLink="/estimator" class="btn btn-inv btn-sm">Open →</a>
+            <a routerLink="/grind-advisor" class="btn btn-inv btn-sm">Open →</a>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@ import { CoffeeService, GrinderService, GrindLogService, RecipeService } from '.
           <span class="panel-title">Grind Logs</span>
         </div>
         <div class="panel-body">
-          <p style="font-size:12px; margin: 0 0 14px; color:#555;">Record your brew sessions to improve estimator accuracy over time.</p>
+          <p style="font-size:12px; margin: 0 0 14px; color:#555;">Record your brew sessions to improve Grind Advisor accuracy over time.</p>
           <div style="display:flex; gap:10px;">
             <a routerLink="/logs" class="btn btn-inv btn-sm">View →</a>
           </div>

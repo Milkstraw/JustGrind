@@ -1,34 +1,31 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../services/services';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-page">
       <div class="auth-card">
         <h2>Create your account</h2>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <mat-form-field appearance="outline">
-            <mat-label>Display name (optional)</mat-label>
-            <input matInput formControlName="displayName" autocomplete="name" />
-          </mat-form-field>
+          <div class="form-group">
+            <label class="form-label">Display name (optional)</label>
+            <input type="text" formControlName="displayName" autocomplete="name" placeholder="Your name" />
+          </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Email</mat-label>
-            <input matInput type="email" formControlName="email" autocomplete="email" />
-          </mat-form-field>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Password (min 6 characters)</mat-label>
-            <input matInput type="password" formControlName="password" autocomplete="new-password" />
-          </mat-form-field>
+          <div class="form-group">
+            <label class="form-label">Password (min 6 characters)</label>
+            <input type="password" formControlName="password" autocomplete="new-password" placeholder="••••••••" />
+          </div>
 
           @if (errors.length) {
             <ul class="auth-errors">
@@ -36,7 +33,7 @@ import { AuthService } from '../../services/services';
             </ul>
           }
 
-          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
+          <button class="btn btn-inv auth-submit" type="submit" [disabled]="form.invalid || loading">
             {{ loading ? 'Creating account…' : 'Create account' }}
           </button>
         </form>
@@ -45,14 +42,20 @@ import { AuthService } from '../../services/services';
     </div>
   `,
   styles: [`
-    .auth-page { display: flex; justify-content: center; align-items: center; min-height: 60vh; }
-    .auth-card { width: 360px; display: flex; flex-direction: column; gap: 8px; }
-    h2 { margin-bottom: 8px; }
-    form { display: flex; flex-direction: column; gap: 4px; }
-    mat-form-field { width: 100%; }
-    button { margin-top: 8px; }
-    .auth-errors { color: #c62828; font-size: 0.875rem; margin: 4px 0; padding-left: 16px; }
-    .auth-link { margin-top: 12px; font-size: 0.875rem; }
+    .auth-page {
+      display: flex; justify-content: center; align-items: center;
+      min-height: 80vh; padding: 40px 24px;
+    }
+    .auth-card {
+      width: min(420px, 100%);
+      display: flex; flex-direction: column; gap: 0;
+    }
+    h2 { margin-bottom: 28px; font-size: 1.4rem; }
+    .auth-submit { width: 100%; margin-top: 8px; padding: 14px; font-size: 0.9rem; }
+    .auth-errors { color: #c62828; font-size: 0.875rem; margin: 0 0 12px; padding-left: 16px; }
+    .auth-link { margin-top: 20px; font-size: 0.875rem; }
+    .auth-link a { color: var(--ink); }
+    input { font-size: 1rem; padding: 13px 14px; }
   `],
 })
 export class RegisterComponent {
@@ -74,7 +77,7 @@ export class RegisterComponent {
     this.loading = true;
     this.errors = [];
     this.auth.register(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/logs']),
+      next: () => this.router.navigate(['/home']),
       error: (err) => {
         this.errors = Array.isArray(err.error) ? err.error : ['Registration failed. Please try again.'];
         this.loading = false;

@@ -1,15 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CoffeeService, GrinderService, EstimatorService } from '../../services/services';
+import { CoffeeService, GrinderService, GrindAdvisorService } from '../../services/services';
 import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } from '../../models/models';
 
 @Component({
-  selector: 'app-estimator',
+  selector: 'app-grind-advisor',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <h1 class="page-title">Estimator</h1>
+    <h1 class="page-title">Grind Advisor</h1>
 
     <!-- Input Panel -->
     <div class="panel" style="margin-bottom: 20px;">
@@ -137,10 +137,10 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
     <div class="error-msg" *ngIf="error">{{ error }}</div>
   `,
 })
-export class EstimatorComponent implements OnInit {
-  private coffeeService    = inject(CoffeeService);
-  private grinderService   = inject(GrinderService);
-  private estimatorService = inject(EstimatorService);
+export class GrindAdvisorComponent implements OnInit {
+  private coffeeService      = inject(CoffeeService);
+  private grinderService     = inject(GrinderService);
+  private grindAdvisorService = inject(GrindAdvisorService);
 
   coffees: Coffee[]   = [];
   grinders: Grinder[] = [];
@@ -210,7 +210,7 @@ export class EstimatorComponent implements OnInit {
     if (!this.canEstimate) return;
     this.loading = true;
     this.error   = undefined;
-    this.estimatorService.estimate({
+    this.grindAdvisorService.estimate({
       coffeeId:        this.selectedCoffeeId!,
       targetGrinderId: this.selectedGrinderId!,
       brewMethod:      this.selectedBrewMethod!,

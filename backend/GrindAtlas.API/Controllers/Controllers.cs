@@ -248,9 +248,9 @@ public class RecipesController(AppDbContext ctx) : ControllerBase
     }
 }
 
-// ── Estimator ────────────────────────────────────────────────────────────────
-[ApiController, Route("api/[controller]")]
-public class EstimatorController(AppDbContext ctx, GrindEstimatorService estimator) : ControllerBase
+// ── Grind Advisor ─────────────────────────────────────────────────────────────
+[ApiController, Route("api/grind-advisor")]
+public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService estimator) : ControllerBase
 {
     [HttpPost("estimate")]
     [Authorize]
