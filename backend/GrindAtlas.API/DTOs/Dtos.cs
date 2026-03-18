@@ -39,7 +39,23 @@ public record AddGrindLogRequest(
     decimal? YieldG,
     int? ExtractionTimeS,
     int? Rating,
-    string? Notes
+    string? Notes,
+    int? RecipeId
 );
 
 public record ConfirmEstimateRequest(decimal ConfirmedSetting);
+
+public record BrewRecipeStepRequest(int StepOrder, string Instruction, int DurationS, decimal? PourWaterG);
+
+public record CreateBrewRecipeRequest(
+    string Name,
+    int CoffeeId,
+    int GrinderId,
+    BrewMethod BrewMethod,
+    decimal? NativeSetting,
+    decimal? DoseG,
+    decimal? WaterG,
+    decimal? WaterTempC,
+    string? TechniqueNotes,
+    List<BrewRecipeStepRequest> Steps
+);

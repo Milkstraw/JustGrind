@@ -18,6 +18,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
           <a class="sidebar-item" routerLink="/coffees"  routerLinkActive="active">Coffees</a>
           <a class="sidebar-item" routerLink="/grinders" routerLinkActive="active">Grinders</a>
           <a class="sidebar-item" routerLink="/logs"     routerLinkActive="active">Logs</a>
+          <a class="sidebar-item" routerLink="/recipes"  routerLinkActive="active">Recipes</a>
         </nav>
         <main class="main">
           <router-outlet />

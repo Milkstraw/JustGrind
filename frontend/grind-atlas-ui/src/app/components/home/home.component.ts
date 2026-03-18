@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { CoffeeService, GrinderService, GrindLogService } from '../../services/services';
+import { CoffeeService, GrinderService, GrindLogService, RecipeService } from '../../services/services';
 
 @Component({
   selector: 'app-home',
@@ -26,8 +26,8 @@ import { CoffeeService, GrinderService, GrindLogService } from '../../services/s
         <div class="stat-num">{{ logCount ?? '—' }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Estimator</div>
-        <div class="stat-num" style="font-size:14px; padding-top:6px;">Ready</div>
+        <div class="stat-label">Recipes</div>
+        <div class="stat-num">{{ recipeCount ?? '—' }}</div>
       </div>
     </div>
 
@@ -82,6 +82,19 @@ import { CoffeeService, GrinderService, GrindLogService } from '../../services/s
           </div>
         </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Brew Recipes</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:12px; margin: 0 0 14px; color:#555;">Build step-by-step brew recipes with a guided timer and session logging.</p>
+          <div style="display:flex; gap:10px;">
+            <a routerLink="/recipes" class="btn btn-inv btn-sm">View →</a>
+            <a routerLink="/recipes/new" class="btn btn-sm">New Recipe</a>
+          </div>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -89,20 +102,24 @@ export class HomeComponent implements OnInit {
   private coffeeService  = inject(CoffeeService);
   private grinderService = inject(GrinderService);
   private logService     = inject(GrindLogService);
+  private recipeService  = inject(RecipeService);
 
   coffeeCount?: number;
   grinderCount?: number;
   logCount?: number;
+  recipeCount?: number;
 
   ngOnInit() {
     forkJoin({
       coffees:  this.coffeeService.getAll(),
       grinders: this.grinderService.getAll(),
       logs:     this.logService.getAll(),
-    }).subscribe(({ coffees, grinders, logs }) => {
+      recipes:  this.recipeService.getAll(),
+    }).subscribe(({ coffees, grinders, logs, recipes }) => {
       this.coffeeCount  = coffees.length;
       this.grinderCount = grinders.length;
       this.logCount     = logs.length;
+      this.recipeCount  = recipes.length;
     });
   }
 }

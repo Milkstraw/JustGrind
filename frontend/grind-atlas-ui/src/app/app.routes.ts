@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { brewGuard } from './components/recipes/recipe-brew.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -36,6 +37,27 @@ export const routes: Routes = [
     path: 'logs',
     loadComponent: () =>
       import('./components/grind-logs/grind-logs.component').then(m => m.GrindLogsComponent),
+  },
+  {
+    path: 'recipes',
+    loadComponent: () =>
+      import('./components/recipes/recipes.component').then(m => m.RecipesComponent),
+  },
+  {
+    path: 'recipes/new',
+    loadComponent: () =>
+      import('./components/recipes/recipe-creator.component').then(m => m.RecipeCreatorComponent),
+  },
+  {
+    path: 'recipes/:id/edit',
+    loadComponent: () =>
+      import('./components/recipes/recipe-creator.component').then(m => m.RecipeCreatorComponent),
+  },
+  {
+    path: 'recipes/:id/brew',
+    loadComponent: () =>
+      import('./components/recipes/recipe-brew.component').then(m => m.RecipeBrewComponent),
+    canDeactivate: [brewGuard],
   },
   { path: '**', redirectTo: 'home' },
 ];
