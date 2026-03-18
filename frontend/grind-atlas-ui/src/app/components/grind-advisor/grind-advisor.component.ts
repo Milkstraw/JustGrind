@@ -14,13 +14,13 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
     <!-- Input Panel -->
     <div class="panel" style="margin-bottom: 20px;">
       <div class="panel-head">
-        <span class="panel-title">Estimate a Grind Setting</span>
+        <span class="panel-title" id="advisor-form-heading">Estimate a Grind Setting</span>
       </div>
       <div class="panel-body">
-        <div class="form-grid-3" style="margin-bottom: 16px;">
+        <div class="form-grid-3" style="margin-bottom: 16px;" role="group" aria-labelledby="advisor-form-heading">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Coffee</label>
-            <select [(ngModel)]="selectedCoffeeId" (ngModelChange)="onSelectionChange()">
+            <label class="form-label" for="advisor-coffee">Coffee</label>
+            <select id="advisor-coffee" [(ngModel)]="selectedCoffeeId" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select coffee…</option>
               <option *ngFor="let c of coffees" [ngValue]="c.id">
                 {{ c.name }} — {{ c.roaster }}
@@ -28,8 +28,8 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Target Grinder</label>
-            <select [(ngModel)]="selectedGrinderId" (ngModelChange)="onSelectionChange()">
+            <label class="form-label" for="advisor-grinder">Target Grinder</label>
+            <select id="advisor-grinder" [(ngModel)]="selectedGrinderId" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select grinder…</option>
               <option *ngFor="let g of grinders" [ngValue]="g.id">
                 {{ g.brand }} {{ g.model }}
@@ -37,8 +37,8 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Brew Method</label>
-            <select [(ngModel)]="selectedBrewMethod" (ngModelChange)="onSelectionChange()">
+            <label class="form-label" for="advisor-brew-method">Brew Method</label>
+            <select id="advisor-brew-method" [(ngModel)]="selectedBrewMethod" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select method…</option>
               <option *ngFor="let m of brewMethods" [ngValue]="m.value">{{ m.label }}</option>
             </select>
@@ -46,7 +46,11 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
         </div>
 
         <div style="display: flex; gap: 10px;">
-          <button class="btn btn-inv" (click)="runEstimate()" [disabled]="!canEstimate || loading">
+          <button
+            class="btn btn-inv"
+            (click)="runEstimate()"
+            [disabled]="!canEstimate || loading"
+            [attr.aria-busy]="loading">
             {{ loading ? 'Estimating...' : 'Get Estimate' }}
           </button>
           <button class="btn" (click)="reset()" *ngIf="result">Clear</button>
@@ -55,7 +59,7 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
     </div>
 
     <!-- Coffee Preview -->
-    <div class="panel" style="margin-bottom: 20px;" *ngIf="selectedCoffee">
+    <div class="panel" style="margin-bottom: 20px;" *ngIf="selectedCoffee" aria-label="Selected coffee details">
       <div class="panel-head">
         <span class="panel-title">{{ selectedCoffee.name }}</span>
         <span class="status-pill">{{ selectedCoffee.processingMethod }}</span>
@@ -63,25 +67,25 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
       <div class="panel-body">
         <div class="form-grid-3">
           <div>
-            <div class="stat-label">Origin</div>
-            <div style="font-size:12px;">{{ selectedCoffee.originRegion ? selectedCoffee.originRegion + ', ' : '' }}{{ selectedCoffee.originCountry }}</div>
+            <div class="stat-label" id="origin-lbl">Origin</div>
+            <div style="font-size:12px;" aria-labelledby="origin-lbl">{{ selectedCoffee.originRegion ? selectedCoffee.originRegion + ', ' : '' }}{{ selectedCoffee.originCountry }}</div>
           </div>
           <div>
-            <div class="stat-label">Variety</div>
-            <div style="font-size:12px;">{{ selectedCoffee.variety || '—' }}</div>
+            <div class="stat-label" id="variety-lbl">Variety</div>
+            <div style="font-size:12px;" aria-labelledby="variety-lbl">{{ selectedCoffee.variety || '—' }}</div>
           </div>
           <div>
-            <div class="stat-label">Elevation</div>
-            <div style="font-size:12px;">{{ selectedCoffee.elevationMasl ? selectedCoffee.elevationMasl + ' masl' : '—' }}</div>
+            <div class="stat-label" id="elevation-lbl">Elevation</div>
+            <div style="font-size:12px;" aria-labelledby="elevation-lbl">{{ selectedCoffee.elevationMasl ? selectedCoffee.elevationMasl + ' masl' : '—' }}</div>
           </div>
           <div>
-            <div class="stat-label">Roast Level</div>
-            <div style="font-size:12px;">{{ roastLabel(selectedCoffee.roastLevel) }} ({{ selectedCoffee.roastLevel }})</div>
+            <div class="stat-label" id="roast-lbl">Roast Level</div>
+            <div style="font-size:12px;" aria-labelledby="roast-lbl">{{ roastLabel(selectedCoffee.roastLevel) }} ({{ selectedCoffee.roastLevel }})</div>
           </div>
           <div style="grid-column: span 2;" *ngIf="getTastingNotes(selectedCoffee).length">
-            <div class="stat-label">Tasting Notes</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
-              <span class="status-pill s-hold" *ngFor="let note of getTastingNotes(selectedCoffee)">{{ note }}</span>
+            <div class="stat-label" id="notes-lbl">Tasting Notes</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;" role="list" aria-labelledby="notes-lbl">
+              <span class="status-pill s-hold" role="listitem" *ngFor="let note of getTastingNotes(selectedCoffee)">{{ note }}</span>
             </div>
           </div>
         </div>
@@ -89,29 +93,44 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
     </div>
 
     <!-- Result -->
-    <div class="panel" *ngIf="result" style="margin-bottom: 20px;">
+    <div
+      class="panel"
+      *ngIf="result"
+      style="margin-bottom: 20px;"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-label="Grind estimate result">
       <div class="panel-head">
         <span class="panel-title">Estimated Grind Setting</span>
-        <span class="status-pill s-active">Layer {{ result.inferenceLayer }}</span>
+        <span class="status-pill s-active" aria-label="Inference layer {{ result.inferenceLayer }}">Layer {{ result.inferenceLayer }}</span>
       </div>
       <div class="panel-body">
-        <div style="display: flex; align-items: baseline; gap: 32px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: baseline; gap: 32px; margin-bottom: 20px; flex-wrap: wrap;">
           <div>
-            <div class="stat-label">Native Setting</div>
-            <div class="stat-num">{{ formatNativeSetting(result.estimatedNativeSetting) }}</div>
-            <div style="font-size:10px; color:#666; margin-top:4px; letter-spacing:0.06em; text-transform:uppercase;">on grinder scale</div>
+            <div class="stat-label" id="native-setting-lbl">Native Setting</div>
+            <div class="stat-num" aria-labelledby="native-setting-lbl">{{ formatNativeSetting(result.estimatedNativeSetting) }}</div>
+            <div style="font-size:10px; color:#666; margin-top:4px; letter-spacing:0.06em; text-transform:uppercase;" aria-hidden="true">on grinder scale</div>
           </div>
           <div>
-            <div class="stat-label">NGI Value</div>
-            <div class="stat-num" style="font-size:20px;">{{ result.estimatedNgi }}</div>
-            <div style="font-size:10px; color:#666; margin-top:4px; letter-spacing:0.06em; text-transform:uppercase;">/ 100 normalized</div>
+            <div class="stat-label" id="ngi-lbl">NGI Value</div>
+            <div class="stat-num" style="font-size:20px;" aria-labelledby="ngi-lbl">{{ result.estimatedNgi }}</div>
+            <div style="font-size:10px; color:#666; margin-top:4px; letter-spacing:0.06em; text-transform:uppercase;" aria-hidden="true">/ 100 normalized</div>
           </div>
         </div>
 
         <div style="border-top: 1px solid var(--mid); padding-top: 16px;">
           <div style="margin-bottom: 14px;">
-            <div class="stat-label" style="margin-bottom:6px;">Confidence — {{ (result.confidenceScore * 100).toFixed(0) }}%</div>
-            <div class="bar-track" style="width: 240px;">
+            <div class="stat-label" style="margin-bottom:6px;" id="confidence-lbl">
+              Confidence — {{ (result.confidenceScore * 100).toFixed(0) }}%
+            </div>
+            <div
+              class="bar-track"
+              style="width: 240px;"
+              role="progressbar"
+              [attr.aria-valuenow]="(result.confidenceScore * 100).toFixed(0)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-labelledby="confidence-lbl">
               <div class="bar-fill" [style.width.%]="result.confidenceScore * 100"></div>
             </div>
           </div>
@@ -126,15 +145,15 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
             </span>
           </div>
           <div>
-            <div class="stat-label">Explanation</div>
-            <div style="font-size:12px; margin-top:4px;">{{ result.explanation }}</div>
+            <div class="stat-label" id="explanation-lbl">Explanation</div>
+            <div style="font-size:12px; margin-top:4px;" aria-labelledby="explanation-lbl">{{ result.explanation }}</div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Error -->
-    <div class="error-msg" *ngIf="error">{{ error }}</div>
+    <div class="error-msg" role="alert" *ngIf="error">{{ error }}</div>
   `,
 })
 export class GrindAdvisorComponent implements OnInit {

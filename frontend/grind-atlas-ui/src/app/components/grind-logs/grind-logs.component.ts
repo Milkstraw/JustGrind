@@ -11,48 +11,58 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
   template: `
     <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:24px;">
       <h1 class="page-title" style="margin-bottom:0;">Grind Logs</h1>
-      <button class="btn" (click)="showForm = !showForm">
+      <button
+        class="btn"
+        (click)="showForm = !showForm"
+        [attr.aria-expanded]="showForm"
+        aria-controls="new-log-form">
         {{ showForm ? 'Cancel' : 'Log a Grind' }}
       </button>
     </div>
 
     <!-- Add Log Form -->
-    <div class="panel" *ngIf="showForm" style="margin-bottom: 20px;">
+    <div class="panel" *ngIf="showForm" id="new-log-form" style="margin-bottom: 20px;" role="region" aria-label="New grind log form">
       <div class="panel-head">
-        <span class="panel-title">New Grind Log</span>
+        <span class="panel-title" id="new-log-heading">New Grind Log</span>
       </div>
       <div class="panel-body">
-        <div class="form-grid-3" style="margin-bottom:14px;">
+        <div class="form-grid-3" style="margin-bottom:14px;" role="group" aria-labelledby="new-log-heading">
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Coffee *</label>
-            <select [(ngModel)]="newLog.coffeeId">
+            <label class="form-label" for="log-coffee">Coffee <span aria-label="required">*</span></label>
+            <select id="log-coffee" [(ngModel)]="newLog.coffeeId" aria-required="true">
               <option [ngValue]="undefined">Select coffee…</option>
               <option *ngFor="let c of coffees" [ngValue]="c.id">{{ c.name }}</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Grinder *</label>
-            <select [(ngModel)]="newLog.grinderId" (ngModelChange)="onGrinderChange()">
+            <label class="form-label" for="log-grinder">Grinder <span aria-label="required">*</span></label>
+            <select id="log-grinder" [(ngModel)]="newLog.grinderId" (ngModelChange)="onGrinderChange()" aria-required="true">
               <option [ngValue]="undefined">Select grinder…</option>
               <option *ngFor="let g of grinders" [ngValue]="g.id">{{ g.brand }} {{ g.model }}</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Brew Method *</label>
-            <select [(ngModel)]="newLog.brewMethod">
+            <label class="form-label" for="log-brew-method">Brew Method <span aria-label="required">*</span></label>
+            <select id="log-brew-method" [(ngModel)]="newLog.brewMethod" aria-required="true">
               <option [ngValue]="undefined">Select method…</option>
               <option *ngFor="let m of brewMethods" [ngValue]="m.value">{{ m.label }}</option>
             </select>
           </div>
           <ng-container *ngIf="selectedGrinder; else numericFallback">
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Native Setting *</label>
+              <label class="form-label" for="log-setting-slider">Native Setting <span aria-label="required">*</span></label>
               <div class="slider-wrap">
-                <span class="slider-value">{{ sliderLabel }}</span>
-                <input type="range"
+                <span class="slider-value" aria-hidden="true">{{ sliderLabel }}</span>
+                <input
+                  id="log-setting-slider"
+                  type="range"
                   [(ngModel)]="newLog.nativeSetting"
-                  [min]="sliderMin" [max]="sliderMax" [step]="sliderStep">
-                <div class="slider-bounds">
+                  [min]="sliderMin"
+                  [max]="sliderMax"
+                  [step]="sliderStep"
+                  [attr.aria-valuetext]="sliderLabel"
+                  aria-required="true">
+                <div class="slider-bounds" aria-hidden="true">
                   <span>{{ formatBound(sliderMin) }}</span>
                   <span>{{ formatBound(sliderMax) }}</span>
                 </div>
@@ -61,25 +71,25 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
           </ng-container>
           <ng-template #numericFallback>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Native Setting *</label>
-              <input type="number" [(ngModel)]="newLog.nativeSetting" step="0.5" placeholder="Select a grinder first">
+              <label class="form-label" for="log-setting-num">Native Setting <span aria-label="required">*</span></label>
+              <input id="log-setting-num" type="number" [(ngModel)]="newLog.nativeSetting" step="0.5" placeholder="Select a grinder first" aria-required="true">
             </div>
           </ng-template>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Dose (g)</label>
-            <input type="number" [(ngModel)]="newLog.doseG" step="0.1" placeholder="e.g. 18">
+            <label class="form-label" for="log-dose">Dose (g)</label>
+            <input id="log-dose" type="number" [(ngModel)]="newLog.doseG" step="0.1" placeholder="e.g. 18">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Yield (g)</label>
-            <input type="number" [(ngModel)]="newLog.yieldG" step="0.1" placeholder="e.g. 36">
+            <label class="form-label" for="log-yield">Yield (g)</label>
+            <input id="log-yield" type="number" [(ngModel)]="newLog.yieldG" step="0.1" placeholder="e.g. 36">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Extraction Time (s)</label>
-            <input type="number" [(ngModel)]="newLog.extractionTimeS" placeholder="e.g. 28">
+            <label class="form-label" for="log-time">Extraction Time (s)</label>
+            <input id="log-time" type="number" [(ngModel)]="newLog.extractionTimeS" placeholder="e.g. 28">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Rating (1–5)</label>
-            <select [(ngModel)]="newLog.rating">
+            <label class="form-label" for="log-rating">Rating (1–5)</label>
+            <select id="log-rating" [(ngModel)]="newLog.rating">
               <option [ngValue]="undefined">—</option>
               <option [ngValue]="1">1</option>
               <option [ngValue]="2">2</option>
@@ -89,8 +99,8 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Notes</label>
-            <input type="text" [(ngModel)]="newLog.notes" placeholder="Observations…">
+            <label class="form-label" for="log-notes">Notes</label>
+            <input id="log-notes" type="text" [(ngModel)]="newLog.notes" placeholder="Observations…">
           </div>
         </div>
         <button class="btn btn-inv" (click)="submitLog()" [disabled]="!canSubmit">Save Log</button>
@@ -98,28 +108,35 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
     </div>
 
     <!-- Logs table -->
-    <div class="section-label">{{ logs.length }} log{{ logs.length !== 1 ? 's' : '' }} — click a row to see notes</div>
+    <div class="section-label" aria-live="polite" aria-atomic="true">{{ logs.length }} log{{ logs.length !== 1 ? 's' : '' }}</div>
     <div class="panel">
       <div style="overflow-x: auto;">
-        <table class="table" style="min-width: 800px;">
+        <table class="table" style="min-width: 800px;" aria-label="Grind logs">
           <thead>
             <tr>
-              <th></th>
-              <th>Coffee</th>
-              <th>Grinder</th>
-              <th>Method</th>
-              <th>Setting</th>
-              <th>NGI</th>
-              <th>Dose</th>
-              <th>Rating</th>
-              <th>Source</th>
+              <th scope="col"><span class="sr-only">Details</span></th>
+              <th scope="col">Coffee</th>
+              <th scope="col">Grinder</th>
+              <th scope="col">Method</th>
+              <th scope="col">Setting</th>
+              <th scope="col">NGI</th>
+              <th scope="col">Dose</th>
+              <th scope="col">Rating</th>
+              <th scope="col">Source</th>
             </tr>
           </thead>
           <tbody>
             <ng-container *ngFor="let l of logs">
-              <tr (click)="toggleExpand(l.id)" style="cursor:pointer;">
-                <td style="width:24px; padding:9px 8px;">
-                  <span style="font-size:10px; color:#999;">{{ expandedLogId === l.id ? '▼' : '▶' }}</span>
+              <tr>
+                <td style="width:32px; padding:9px 4px; text-align:center;">
+                  <button
+                    class="expand-btn"
+                    [attr.aria-expanded]="expandedLogId === l.id"
+                    [attr.aria-label]="(expandedLogId === l.id ? 'Collapse' : 'Expand') + ' details for ' + (l.coffee?.name ?? 'log')"
+                    [attr.aria-controls]="'log-detail-' + l.id"
+                    (click)="toggleExpand(l.id)">
+                    <span aria-hidden="true">{{ expandedLogId === l.id ? '▼' : '▶' }}</span>
+                  </button>
                 </td>
                 <td><strong>{{ l.coffee?.name ?? 'Coffee #' + l.coffeeId }}</strong></td>
                 <td>{{ l.grinder?.brand ?? '' }} {{ l.grinder?.model ?? '#' + l.grinderId }}</td>
@@ -134,33 +151,33 @@ import { Coffee, Grinder, GrindLog, BrewMethod, BREW_METHOD_LABELS, AddGrindLogR
                 </td>
               </tr>
               <!-- Expanded notes panel -->
-              <tr *ngIf="expandedLogId === l.id">
+              <tr *ngIf="expandedLogId === l.id" [id]="'log-detail-' + l.id" role="region" [attr.aria-label]="'Details for ' + (l.coffee?.name ?? 'log')">
                 <td colspan="9" style="background:var(--paper); padding:0;">
                   <div style="padding:14px 18px; border-left:4px solid var(--ink); font-size:13px;">
-                    <div style="display:flex; gap:32px; flex-wrap:wrap; margin-bottom:10px;">
+                    <dl style="display:flex; gap:32px; flex-wrap:wrap; margin-bottom:10px;">
                       <div>
-                        <span class="form-label">Brew Date</span>
-                        <div>{{ l.brewDate ? formatDate(l.brewDate) : formatDate(l.createdAt) }}</div>
+                        <dt class="form-label">Brew Date</dt>
+                        <dd style="margin:0;">{{ l.brewDate ? formatDate(l.brewDate) : formatDate(l.createdAt) }}</dd>
                       </div>
                       <div>
-                        <span class="form-label">Source</span>
-                        <div *ngIf="l.recipe"><strong>Recipe:</strong> {{ l.recipe.name }}</div>
-                        <div *ngIf="!l.recipe">Quick Log</div>
+                        <dt class="form-label">Source</dt>
+                        <dd style="margin:0;" *ngIf="l.recipe"><strong>Recipe:</strong> {{ l.recipe.name }}</dd>
+                        <dd style="margin:0;" *ngIf="!l.recipe">Quick Log</dd>
                       </div>
                       <div *ngIf="l.yieldG">
-                        <span class="form-label">Yield</span>
-                        <div>{{ l.yieldG }}g</div>
+                        <dt class="form-label">Yield</dt>
+                        <dd style="margin:0;">{{ l.yieldG }}g</dd>
                       </div>
                       <div *ngIf="l.extractionTimeS">
-                        <span class="form-label">Extraction Time</span>
-                        <div>{{ l.extractionTimeS }}s</div>
+                        <dt class="form-label">Extraction Time</dt>
+                        <dd style="margin:0;">{{ l.extractionTimeS }}s</dd>
                       </div>
-                    </div>
+                    </dl>
                     <div>
-                      <span class="form-label">Notes</span>
-                      <div style="margin-top:4px; color:{{ l.notes ? 'var(--ink)' : '#999' }};">
+                      <p class="form-label" style="margin:0 0 4px;">Notes</p>
+                      <p style="margin:0; color:{{ l.notes ? 'var(--ink)' : '#999' }};">
                         {{ l.notes || 'No notes recorded.' }}
-                      </div>
+                      </p>
                     </div>
                   </div>
                 </td>

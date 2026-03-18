@@ -16,59 +16,59 @@ import { Coffee, ProcessingMethod } from '../../models/models';
     </div>
 
     <!-- Filters -->
-    <div class="panel" style="margin-bottom: 20px;">
+    <div class="panel" style="margin-bottom: 20px;" role="search" aria-label="Coffee filters">
       <div class="panel-head">
-        <span class="panel-title">Filters</span>
-        <button class="btn btn-sm" (click)="clearFilters()">Clear</button>
+        <span class="panel-title" id="filters-heading">Filters</span>
+        <button class="btn btn-sm" (click)="clearFilters()">Clear filters</button>
       </div>
       <div class="panel-body">
-        <div class="form-grid-3">
+        <div class="form-grid-3" role="group" aria-labelledby="filters-heading">
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Search</label>
-            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilters()" placeholder="Name or roaster…">
+            <label class="form-label" for="coffee-search">Search</label>
+            <input id="coffee-search" type="text" [(ngModel)]="search" (ngModelChange)="applyFilters()" placeholder="Name or roaster…" aria-describedby="coffee-count">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Origin Country</label>
-            <input type="text" [(ngModel)]="originFilter" (ngModelChange)="applyFilters()" placeholder="e.g. Ethiopia">
+            <label class="form-label" for="origin-filter">Origin Country</label>
+            <input id="origin-filter" type="text" [(ngModel)]="originFilter" (ngModelChange)="applyFilters()" placeholder="e.g. Ethiopia">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Processing</label>
-            <select [(ngModel)]="processingFilter" (ngModelChange)="applyFilters()">
+            <label class="form-label" for="processing-filter">Processing</label>
+            <select id="processing-filter" [(ngModel)]="processingFilter" (ngModelChange)="applyFilters()">
               <option value="">All</option>
               <option *ngFor="let p of processingMethods" [value]="p">{{ p }}</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Min Roast</label>
-            <input type="number" [(ngModel)]="minRoast" (ngModelChange)="applyFilters()" min="1" max="5" step="0.5">
+            <label class="form-label" for="min-roast">Min Roast</label>
+            <input id="min-roast" type="number" [(ngModel)]="minRoast" (ngModelChange)="applyFilters()" min="1" max="5" step="0.5">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Max Roast</label>
-            <input type="number" [(ngModel)]="maxRoast" (ngModelChange)="applyFilters()" min="1" max="5" step="0.5">
+            <label class="form-label" for="max-roast">Max Roast</label>
+            <input id="max-roast" type="number" [(ngModel)]="maxRoast" (ngModelChange)="applyFilters()" min="1" max="5" step="0.5">
           </div>
         </div>
       </div>
     </div>
 
     <!-- Count -->
-    <div class="section-label">{{ filteredCoffees.length }} coffees</div>
+    <div class="section-label" id="coffee-count" aria-live="polite" aria-atomic="true">{{ filteredCoffees.length }} coffees</div>
 
     <!-- Loading -->
-    <div *ngIf="loading" style="font-size:12px; color:#666; padding:20px 0;">LOADING...</div>
+    <div *ngIf="loading" style="font-size:12px; color:#666; padding:20px 0;" role="status" aria-live="polite">Loading coffees…</div>
 
     <!-- Table -->
     <div class="panel" *ngIf="!loading">
       <div style="overflow-x: auto;">
-      <table class="table" style="min-width: 800px;">
+      <table class="table" style="min-width: 800px;" aria-label="Coffee catalog">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Roaster</th>
-            <th>Origin</th>
-            <th>Processing</th>
-            <th>Roast</th>
-            <th>Variety</th>
-            <th>Notes</th>
+            <th scope="col">Name</th>
+            <th scope="col">Roaster</th>
+            <th scope="col">Origin</th>
+            <th scope="col">Processing</th>
+            <th scope="col">Roast</th>
+            <th scope="col">Variety</th>
+            <th scope="col">Notes</th>
           </tr>
         </thead>
         <tbody>

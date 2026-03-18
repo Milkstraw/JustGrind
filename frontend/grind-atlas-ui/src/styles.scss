@@ -15,6 +15,8 @@ html, body, * {
   --b-thin: 1.5px solid #0a0a0a;
   --b-thick: 4px solid #0a0a0a;
   --b-mid:  2.5px solid #0a0a0a;
+  --topbar-h: 60px;
+  --sidebar-w: 220px;
 }
 
 html {
@@ -34,6 +36,17 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
 }
 
+/* ── Focus visible — accessible keyboard indicator ────────── */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Remove default outline only when focus-visible is not triggered */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ── Layout ───────────────────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -45,13 +58,15 @@ h1, h2, h3, h4, h5, h6 {
 .topbar {
   background: var(--ink);
   color: var(--paper);
-  height: 60px;
+  height: var(--topbar-h);
   border-bottom: var(--b-thick);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
 }
 
 .topbar-brand {
@@ -66,10 +81,11 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .sidebar {
-  width: 220px;
+  width: var(--sidebar-w);
   background: var(--ink);
   color: var(--paper);
   border-right: var(--b-thick);
@@ -77,6 +93,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  transition: transform 0.25s ease;
 }
 
 .sidebar-section {
@@ -248,6 +265,8 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   background: var(--paper);
+  outline: 3px solid var(--ink);
+  outline-offset: 1px;
 }
 
 /* ── Tables ───────────────────────────────────────────────── */
@@ -380,6 +399,11 @@ input[type="range"] {
   cursor: pointer;
 }
 
+input[type="range"]:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -419,4 +443,94 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.08em;
   color: #666;
   text-transform: uppercase;
+}
+
+/* ── Screen-reader only utility ───────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Expand button in tables ──────────────────────────────── */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: #999;
+  font-size: 10px;
+  line-height: 1;
+}
+.expand-btn:hover { color: var(--ink); }
+
+/* ── Mobile responsive ────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sidebar: fixed overlay, off-screen by default */
+  .sidebar {
+    position: fixed;
+    top: var(--topbar-h);
+    left: 0;
+    height: calc(100dvh - var(--topbar-h));
+    z-index: 100;
+    transform: translateX(-100%);
+    border-right: var(--b-thick);
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  /* Main takes full width on mobile */
+  .main {
+    padding: 20px 16px;
+  }
+
+  /* Page title smaller on mobile */
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* Stats row: 2 columns on tablet */
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Grid helpers collapse */
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Form grids collapse to single column */
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stats: single column on small phones */
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .main {
+    padding: 16px 12px;
+  }
+
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
 }
