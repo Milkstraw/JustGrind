@@ -2,8 +2,10 @@ using GrindAtlas.API.Data;
 using GrindAtlas.API.DTOs;
 using GrindAtlas.API.Models;
 using GrindAtlas.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 // ── Coffees ──────────────────────────────────────────────────────────────────
 namespace GrindAtlas.API.Controllers;
@@ -91,15 +93,18 @@ public class GrindersController(AppDbContext ctx) : ControllerBase
 
 // ── GrindLogs ────────────────────────────────────────────────────────────────
 [ApiController, Route("api/[controller]")]
+[Authorize]
 public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimator) : ControllerBase
 {
     [HttpGet]
     public IActionResult GetAll([FromQuery] int? coffeeId, [FromQuery] int? grinderId)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var q = ctx.GrindLogs
             .Include(l => l.Coffee)
             .Include(l => l.Grinder)
             .Include(l => l.Recipe)
+            .Where(l => l.UserId == userId)
             .AsQueryable();
         if (coffeeId.HasValue)  q = q.Where(l => l.CoffeeId == coffeeId.Value);
         if (grinderId.HasValue) q = q.Where(l => l.GrinderId == grinderId.Value);
@@ -109,6 +114,7 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
     [HttpPost]
     public IActionResult Create(AddGrindLogRequest req)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
         var ngi = estimator.NativeToNgi(req.NativeSetting, req.GrinderId);
         var log = new GrindLog
@@ -126,6 +132,7 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
             RecipeId         = req.RecipeId,
             BrewDate         = DateOnly.FromDateTime(DateTime.UtcNow),
             CreatedAt        = DateTime.UtcNow,
+            UserId           = userId,
         };
         ctx.GrindLogs.Add(log);
         ctx.SaveChanges();
@@ -246,6 +253,7 @@ public class RecipesController(AppDbContext ctx) : ControllerBase
 public class EstimatorController(AppDbContext ctx, GrindEstimatorService estimator) : ControllerBase
 {
     [HttpPost("estimate")]
+    [Authorize]
     public IActionResult Estimate(EstimateRequest req)
     {
         try
@@ -281,6 +289,7 @@ public class EstimatorController(AppDbContext ctx, GrindEstimatorService estimat
                 SourceLogCount         = result.SourceLogCount,
                 AvgSimilarityScore     = (decimal)result.AvgSimilarityScore,
                 CreatedAt              = DateTime.UtcNow,
+                UserId                 = User.FindFirstValue(ClaimTypes.NameIdentifier),
             };
             ctx.GrindEstimates.Add(audit);
             ctx.SaveChanges();
@@ -291,9 +300,11 @@ public class EstimatorController(AppDbContext ctx, GrindEstimatorService estimat
     }
 
     [HttpPost("estimate/{estimateId}/confirm")]
+    [Authorize]
     public IActionResult Confirm(int estimateId, ConfirmEstimateRequest req)
     {
-        var est = ctx.GrindEstimates.Find(estimateId);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var est = ctx.GrindEstimates.FirstOrDefault(e => e.Id == estimateId && e.UserId == userId);
         if (est is null) return NotFound();
         est.UserConfirmedSetting = req.ConfirmedSetting;
         est.AccuracyDelta = est.EstimatedNativeSetting - req.ConfirmedSetting;

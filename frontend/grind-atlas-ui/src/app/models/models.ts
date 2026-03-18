@@ -174,3 +174,21 @@ export interface AddGrindLogRequest {
   notes?: string;
   recipeId?: number;
 }
+
+// auth
+export interface AuthUser {
+  email: string;
+  displayName?: string | null;
+  token: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName?: string;
+}

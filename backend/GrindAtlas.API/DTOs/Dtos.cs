@@ -45,6 +45,10 @@ public record AddGrindLogRequest(
 
 public record ConfirmEstimateRequest(decimal ConfirmedSetting);
 
+public record RegisterRequest(string Email, string Password, string? DisplayName);
+public record LoginRequest(string Email, string Password);
+public record AuthResponse(string Token, string Email, string? DisplayName);
+
 public record BrewRecipeStepRequest(int StepOrder, string Instruction, int DurationS, decimal? PourWaterG);
 
 public record CreateBrewRecipeRequest(
