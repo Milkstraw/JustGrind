@@ -43,7 +43,10 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+    opt.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
 builder.Services.AddScoped<GrindEstimatorService>();
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(

@@ -1,5 +1,6 @@
 using GrindAtlas.API.DTOs;
 using GrindAtlas.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,7 @@ using System.Text;
 namespace GrindAtlas.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
+[AllowAnonymous]
 public class AuthController(UserManager<ApplicationUser> userManager, IConfiguration config) : ControllerBase
 {
     [HttpPost("register")]

@@ -7,6 +7,7 @@ export const routes: Routes = [
     path: 'home',
     loadComponent: () =>
       import('./components/home/home.component').then(m => m.HomeComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'estimator',
@@ -18,21 +19,25 @@ export const routes: Routes = [
     path: 'coffees',
     loadComponent: () =>
       import('./components/coffees/coffees.component').then(m => m.CoffeesComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'coffees/add',
     loadComponent: () =>
       import('./components/coffees/add-coffee.component').then(m => m.AddCoffeeComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'grinders',
     loadComponent: () =>
       import('./components/grinders/grinders.component').then(m => m.GrindersComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'grinders/add',
     loadComponent: () =>
       import('./components/grinders/add-grinder.component').then(m => m.AddGrinderComponent),
+    canActivate: [authGuard],
   },
   {
     path: 'logs',
@@ -50,5 +55,5 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/auth/register.component').then(m => m.RegisterComponent),
   },
-  { path: '**', redirectTo: 'home' },
+  { path: '**', redirectTo: 'login' },
 ];

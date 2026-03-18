@@ -27,11 +27,7 @@ import { AuthService } from './services/services';
           <a class="sidebar-item" routerLink="/estimator" routerLinkActive="active">Estimator</a>
           <a class="sidebar-item" routerLink="/coffees"   routerLinkActive="active">Coffees</a>
           <a class="sidebar-item" routerLink="/grinders"  routerLinkActive="active">Grinders</a>
-          @if (auth.isLoggedIn()) {
-            <a class="sidebar-item" routerLink="/logs" routerLinkActive="active">My Logs</a>
-          } @else {
-            <a class="sidebar-item sidebar-item--muted" routerLink="/login">Logs (sign in)</a>
-          }
+          <a class="sidebar-item" routerLink="/logs" routerLinkActive="active">My Logs</a>
         </nav>
         <main class="main">
           <router-outlet />
@@ -54,7 +50,6 @@ import { AuthService } from './services/services';
       border-radius: 4px; opacity: 1;
     }
     .topbar-link--primary:hover { background: rgba(255,255,255,0.3); }
-    .sidebar-item--muted { opacity: 0.5; font-style: italic; }
   `],
 })
 export class AppComponent {
