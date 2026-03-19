@@ -14,52 +14,52 @@ import { Grinder } from '../../models/models';
       <a routerLink="/grinders/add" class="btn btn-inv">Add Grinder</a>
     </div>
 
-    <div class="section-label">{{ grinders.length }} grinders</div>
+    <div class="section-label" aria-live="polite">{{ grinders.length }} grinders</div>
 
-    <div *ngIf="!grinders.length" style="font-size:12px; color:#666; padding:20px 0;">LOADING...</div>
+    <div *ngIf="!grinders.length" style="font-size:12px; color:#666; padding:20px 0;" role="status" aria-live="polite">Loading grinders…</div>
 
     <div class="grid-2" *ngIf="grinders.length">
-      <div class="panel" *ngFor="let g of grinders">
+      <article class="panel" *ngFor="let g of grinders" [attr.aria-label]="g.brand + ' ' + g.model">
         <div class="panel-head">
-          <span class="panel-title">{{ g.brand }} {{ g.model }}</span>
-          <span class="status-pill">{{ g.burrType }}</span>
+          <h2 class="panel-title">{{ g.brand }} {{ g.model }}</h2>
+          <span class="status-pill" aria-label="Burr type: {{ g.burrType }}">{{ g.burrType }}</span>
         </div>
         <div class="panel-body">
-          <div style="display:flex; gap:24px; margin-bottom: 14px;">
+          <dl style="display:flex; gap:24px; margin-bottom: 14px; flex-wrap:wrap;">
             <div>
-              <div class="stat-label">Grind Type</div>
-              <div style="font-size:12px;">{{ g.grindType }}</div>
+              <dt class="stat-label">Grind Type</dt>
+              <dd style="font-size:12px; margin:0;">{{ g.grindType }}</dd>
             </div>
             <div>
-              <div class="stat-label">Scale</div>
-              <div style="font-size:13px;">{{ formatScale(g) }}</div>
+              <dt class="stat-label">Scale</dt>
+              <dd style="font-size:13px; margin:0;">{{ formatScale(g) }}</dd>
             </div>
             <div>
-              <div class="stat-label">Scale Type</div>
-              <div style="font-size:13px;">{{ g.scaleType }}</div>
+              <dt class="stat-label">Scale Type</dt>
+              <dd style="font-size:13px; margin:0;">{{ g.scaleType }}</dd>
             </div>
             <div *ngIf="g.burrSizeMm">
-              <div class="stat-label">Burr Size</div>
-              <div style="font-size:12px;">{{ g.burrSizeMm }}mm</div>
+              <dt class="stat-label">Burr Size</dt>
+              <dd style="font-size:12px; margin:0;">{{ g.burrSizeMm }}mm</dd>
             </div>
             <div>
-              <div class="stat-label">Verified</div>
-              <div style="font-size:12px;">{{ g.isVerified ? 'Yes' : 'No' }}</div>
+              <dt class="stat-label">Verified</dt>
+              <dd style="font-size:12px; margin:0;">{{ g.isVerified ? 'Yes' : 'No' }}</dd>
             </div>
-          </div>
+          </dl>
 
           <!-- Calibrations -->
           <div *ngIf="g.calibrations?.length">
-            <div style="font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:#666; margin-bottom:6px;">
+            <h3 style="font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:#666; margin-bottom:6px; font-weight:400;" [id]="'cal-heading-' + g.id">
               NGI Calibrations ({{ g.calibrations!.length }})
-            </div>
-            <table class="table">
+            </h3>
+            <table class="table" [attr.aria-labelledby]="'cal-heading-' + g.id">
               <thead>
                 <tr>
-                  <th>Brew Method</th>
-                  <th>Native</th>
-                  <th>NGI</th>
-                  <th>Label</th>
+                  <th scope="col">Brew Method</th>
+                  <th scope="col">Native</th>
+                  <th scope="col">NGI</th>
+                  <th scope="col">Label</th>
                 </tr>
               </thead>
               <tbody>
@@ -75,7 +75,7 @@ import { Grinder } from '../../models/models';
             </table>
           </div>
         </div>
-      </div>
+      </article>
     </div>
   `,
 })
