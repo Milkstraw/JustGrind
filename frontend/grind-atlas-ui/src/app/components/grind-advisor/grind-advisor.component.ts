@@ -102,7 +102,7 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
       aria-label="Grind estimate result">
       <div class="panel-head">
         <span class="panel-title">Estimated Grind Setting</span>
-        <span class="status-pill s-active" aria-label="Inference layer {{ result.inferenceLayer }}">Layer {{ result.inferenceLayer }}</span>
+        <span class="status-pill s-active" [attr.aria-label]="'Inference layer ' + result.inferenceLayer">Layer {{ result.inferenceLayer }}</span>
       </div>
       <div class="panel-body">
         <div style="display: flex; align-items: baseline; gap: 32px; margin-bottom: 20px; flex-wrap: wrap;">

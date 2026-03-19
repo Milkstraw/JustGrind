@@ -11,7 +11,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=grindatlas.db"));
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opt =>
 {
@@ -80,7 +80,7 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p =>
-    p.WithOrigins("http://localhost:4200")
+    p.WithOrigins("http://localhost:4200", "https://grindatlas.netlify.app")
      .AllowAnyHeader()
      .AllowAnyMethod()));
 

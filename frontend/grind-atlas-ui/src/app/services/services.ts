@@ -8,7 +8,7 @@ import {
   BrewRecipe, CreateBrewRecipeRequest,
 } from '../models/models';
 
-const BASE = 'http://localhost:5000/api';
+const BASE = 'https://grindatlas.onrender.com/api';
 
 // ── Coffee Service ────────────────────────────────────────────────────────────
 @Injectable({ providedIn: 'root' })

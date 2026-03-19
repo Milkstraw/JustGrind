@@ -22,7 +22,7 @@ import { Grinder } from '../../models/models';
       <article class="panel" *ngFor="let g of grinders" [attr.aria-label]="g.brand + ' ' + g.model">
         <div class="panel-head">
           <h2 class="panel-title">{{ g.brand }} {{ g.model }}</h2>
-          <span class="status-pill" aria-label="Burr type: {{ g.burrType }}">{{ g.burrType }}</span>
+          <span class="status-pill" [attr.aria-label]="'Burr type: ' + g.burrType">{{ g.burrType }}</span>
         </div>
         <div class="panel-body">
           <dl style="display:flex; gap:24px; margin-bottom: 14px; flex-wrap:wrap;">
