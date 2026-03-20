@@ -6,6 +6,7 @@ import {
   AddGrindLogRequest, BrewMethod, ProcessingMethod,
   AuthUser, LoginRequest, RegisterRequest,
   BrewRecipe, CreateBrewRecipeRequest,
+  UserCoffee, UserGrinder, UserBrewMethod, CoffeeBag, OpenCoffeeBagRequest, FreshnessInfo,
 } from '../models/models';
 
 const BASE = 'https://grindatlas.onrender.com/api';
@@ -140,6 +141,68 @@ export class RecipeService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${BASE}/recipes/${id}`);
+  }
+}
+
+// ── Collection Service ────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class CollectionService {
+  private http = inject(HttpClient);
+
+  // My Shelf — coffees
+  getShelf(): Observable<UserCoffee[]> {
+    return this.http.get<UserCoffee[]>(`${BASE}/collection/coffees`);
+  }
+
+  addToShelf(coffeeId: number): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/coffees/${coffeeId}`, {});
+  }
+
+  removeFromShelf(coffeeId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/coffees/${coffeeId}`);
+  }
+
+  // My Setup — grinders
+  getSetupGrinders(): Observable<UserGrinder[]> {
+    return this.http.get<UserGrinder[]>(`${BASE}/collection/grinders`);
+  }
+
+  addGrinderToSetup(grinderId: number): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/grinders/${grinderId}`, {});
+  }
+
+  removeGrinderFromSetup(grinderId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/grinders/${grinderId}`);
+  }
+
+  // My Setup — brew methods
+  getSetupBrewMethods(): Observable<UserBrewMethod[]> {
+    return this.http.get<UserBrewMethod[]>(`${BASE}/collection/brewmethods`);
+  }
+
+  addBrewMethodToSetup(method: BrewMethod): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/brewmethods/${method}`, {});
+  }
+
+  removeBrewMethodFromSetup(method: BrewMethod): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/brewmethods/${method}`);
+  }
+
+  // Bag Tracking
+  getBags(): Observable<CoffeeBag[]> {
+    return this.http.get<CoffeeBag[]>(`${BASE}/collection/bags`);
+  }
+
+  openBag(req: OpenCoffeeBagRequest): Observable<CoffeeBag> {
+    return this.http.post<CoffeeBag>(`${BASE}/collection/bags`, req);
+  }
+
+  closeBag(bagId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/bags/${bagId}`);
+  }
+
+  getBagFreshness(bagId: number): Observable<FreshnessInfo> {
+    return this.http.get<FreshnessInfo>(`${BASE}/collection/bags/${bagId}/freshness`);
   }
 }
 

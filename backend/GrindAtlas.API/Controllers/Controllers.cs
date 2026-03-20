@@ -115,24 +115,41 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
     public IActionResult Create(AddGrindLogRequest req)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Duplicate detection: same recipe + user + today
+        if (req.RecipeId.HasValue)
+        {
+            var duplicate = ctx.GrindLogs.Any(l =>
+                l.UserId == userId &&
+                l.RecipeId == req.RecipeId &&
+                l.BrewDate == today);
+            if (duplicate)
+                return Conflict("A session for this recipe was already saved today. Remove the existing log first if you want to re-save.");
+        }
+
+        if (req.ExtractionFeedback.HasValue && (req.ExtractionFeedback < -3 || req.ExtractionFeedback > 3))
+            return BadRequest("ExtractionFeedback must be between -3 and 3.");
+
         var notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
         var ngi = estimator.NativeToNgi(req.NativeSetting, req.GrinderId);
         var log = new GrindLog
         {
-            CoffeeId         = req.CoffeeId,
-            GrinderId        = req.GrinderId,
-            BrewMethod       = req.BrewMethod,
-            NativeSetting    = req.NativeSetting,
-            NgiNormalized    = ngi,
-            DoseG            = req.DoseG,
-            YieldG           = req.YieldG,
-            ExtractionTimeS  = req.ExtractionTimeS,
-            Rating           = req.Rating,
-            Notes            = notes,
-            RecipeId         = req.RecipeId,
-            BrewDate         = DateOnly.FromDateTime(DateTime.UtcNow),
-            CreatedAt        = DateTime.UtcNow,
-            UserId           = userId,
+            CoffeeId           = req.CoffeeId,
+            GrinderId          = req.GrinderId,
+            BrewMethod         = req.BrewMethod,
+            NativeSetting      = req.NativeSetting,
+            NgiNormalized      = ngi,
+            DoseG              = req.DoseG,
+            YieldG             = req.YieldG,
+            ExtractionTimeS    = req.ExtractionTimeS,
+            Rating             = req.Rating,
+            ExtractionFeedback = req.ExtractionFeedback,
+            Notes              = notes,
+            RecipeId           = req.RecipeId,
+            BrewDate           = today,
+            CreatedAt          = DateTime.UtcNow,
+            UserId             = userId,
         };
         ctx.GrindLogs.Add(log);
         ctx.SaveChanges();

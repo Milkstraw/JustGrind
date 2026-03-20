@@ -39,8 +39,31 @@ public record AddGrindLogRequest(
     decimal? YieldG,
     int? ExtractionTimeS,
     int? Rating,
+    int? ExtractionFeedback,  // -3 (very under) to +3 (very over)
     string? Notes,
     int? RecipeId
+);
+
+public record OpenCoffeeBagRequest(
+    int CoffeeId,
+    DateOnly? RoastedOn,
+    decimal? BagWeightG,
+    string? Notes
+);
+
+public record FreshnessInfo(
+    int BagId,
+    int CoffeeId,
+    string CoffeeName,
+    DateTime OpenedAt,
+    DateOnly? RoastedOn,
+    int? DaysSinceRoast,
+    string FreshnessStatus,   // "Too Fresh" | "Peak" | "Acceptable" | "Past Peak"
+    int? PeakStartDay,
+    int? PeakEndDay,
+    decimal? UsageRateGPerDay,
+    decimal? EstimatedDaysRemaining,
+    bool IsRunningLow
 );
 
 public record ConfirmEstimateRequest(decimal ConfirmedSetting);

@@ -171,8 +171,68 @@ export interface AddGrindLogRequest {
   yieldG?: number;
   extractionTimeS?: number;
   rating?: number;
+  extractionFeedback?: number;  // -3 (very under) to +3 (very over)
   notes?: string;
   recipeId?: number;
+}
+
+// Collection — My Shelf
+export interface UserCoffee {
+  id: number;
+  userId: string;
+  coffeeId: number;
+  addedAt: string;
+  coffee: Coffee;
+}
+
+// Collection — My Setup
+export interface UserGrinder {
+  id: number;
+  userId: string;
+  grinderId: number;
+  addedAt: string;
+  grinder: Grinder;
+}
+
+export interface UserBrewMethod {
+  id: number;
+  userId: string;
+  brewMethod: BrewMethod;
+  addedAt: string;
+}
+
+// Bag Tracking
+export interface CoffeeBag {
+  id: number;
+  userId: string;
+  coffeeId: number;
+  openedAt: string;
+  roastedOn?: string;
+  bagWeightG?: number;
+  notes?: string;
+  coffee: Coffee;
+}
+
+export interface OpenCoffeeBagRequest {
+  coffeeId: number;
+  roastedOn?: string;
+  bagWeightG?: number;
+  notes?: string;
+}
+
+export interface FreshnessInfo {
+  bagId: number;
+  coffeeId: number;
+  coffeeName: string;
+  openedAt: string;
+  roastedOn?: string;
+  daysSinceRoast?: number;
+  freshnessStatus: 'Too Fresh' | 'Peak' | 'Acceptable' | 'Past Peak' | 'Unknown';
+  peakStartDay?: number;
+  peakEndDay?: number;
+  usageRateGPerDay?: number;
+  estimatedDaysRemaining?: number;
+  isRunningLow: boolean;
 }
 
 // auth

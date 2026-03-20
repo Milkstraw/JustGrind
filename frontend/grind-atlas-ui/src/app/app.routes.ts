@@ -76,6 +76,18 @@ export const routes: Routes = [
     canDeactivate: [brewGuard],
   },
   {
+    path: 'collection/shelf',
+    loadComponent: () =>
+      import('./components/collection/my-shelf.component').then(m => m.MyShelfComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'collection/setup',
+    loadComponent: () =>
+      import('./components/collection/my-setup.component').then(m => m.MySetupComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./components/auth/login.component').then(m => m.LoginComponent),
