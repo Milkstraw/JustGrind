@@ -54,12 +54,15 @@ const SHELL_HIDDEN_ROUTES = ['/', '/login', '/register', '/not-found'];
             role="navigation"
             aria-label="Main navigation">
             <div class="sidebar-section" aria-hidden="true">Navigation</div>
-            <a class="sidebar-item" routerLink="/home"         routerLinkActive="active" (click)="closeSidebar()">Home</a>
-            <a class="sidebar-item" routerLink="/grind-advisor" routerLinkActive="active" (click)="closeSidebar()">Grind Advisor</a>
-            <a class="sidebar-item" routerLink="/coffees"      routerLinkActive="active" (click)="closeSidebar()">Coffees</a>
-            <a class="sidebar-item" routerLink="/grinders"     routerLinkActive="active" (click)="closeSidebar()">Grinders</a>
-            <a class="sidebar-item" routerLink="/logs"         routerLinkActive="active" (click)="closeSidebar()">My Logs</a>
-            <a class="sidebar-item" routerLink="/recipes"      routerLinkActive="active" (click)="closeSidebar()">Recipes</a>
+            <a class="sidebar-item" routerLink="/home"             routerLinkActive="active" (click)="closeSidebar()">Home</a>
+            <a class="sidebar-item" routerLink="/grind-advisor"    routerLinkActive="active" (click)="closeSidebar()">Grind Advisor</a>
+            <a class="sidebar-item" routerLink="/coffees"          routerLinkActive="active" (click)="closeSidebar()">Coffees</a>
+            <a class="sidebar-item" routerLink="/grinders"         routerLinkActive="active" (click)="closeSidebar()">Grinders</a>
+            <a class="sidebar-item" routerLink="/logs"             routerLinkActive="active" (click)="closeSidebar()">My Logs</a>
+            <a class="sidebar-item" routerLink="/recipes"          routerLinkActive="active" (click)="closeSidebar()">Recipes</a>
+            <div class="sidebar-section" aria-hidden="true">Collection</div>
+            <a class="sidebar-item" routerLink="/collection/shelf" routerLinkActive="active" (click)="closeSidebar()">My Shelf</a>
+            <a class="sidebar-item" routerLink="/collection/setup" routerLinkActive="active" (click)="closeSidebar()">My Setup</a>
           </nav>
         }
         <main id="main-content" [class]="showShell() ? 'main' : 'main-full'" tabindex="-1">

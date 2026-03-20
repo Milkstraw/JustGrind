@@ -2,3 +2,8 @@
   base    = "frontend/grind-atlas-ui"
   command = "npm run build"
   publish = "dist/grind-atlas-ui/browser"
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200

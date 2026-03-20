@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CoffeeService, GrinderService, GrindAdvisorService } from '../../services/services';
+import { forkJoin } from 'rxjs';
+import { CoffeeService, GrinderService, GrindAdvisorService, CollectionService } from '../../services/services';
 import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } from '../../models/models';
 
 @Component({
@@ -22,25 +23,44 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
             <label class="form-label" for="advisor-coffee">Coffee</label>
             <select id="advisor-coffee" [(ngModel)]="selectedCoffeeId" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select coffee…</option>
-              <option *ngFor="let c of coffees" [ngValue]="c.id">
-                {{ c.name }} — {{ c.roaster }}
-              </option>
+              <optgroup *ngIf="shelfCoffees.length" label="My Shelf">
+                <option *ngFor="let c of shelfCoffees" [ngValue]="c.id">
+                  {{ c.name }} — {{ c.roaster }}
+                </option>
+              </optgroup>
+              <optgroup [label]="shelfCoffees.length ? 'All Coffees' : ''">
+                <option *ngFor="let c of otherCoffees" [ngValue]="c.id">
+                  {{ c.name }} — {{ c.roaster }}
+                </option>
+              </optgroup>
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="advisor-grinder">Target Grinder</label>
             <select id="advisor-grinder" [(ngModel)]="selectedGrinderId" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select grinder…</option>
-              <option *ngFor="let g of grinders" [ngValue]="g.id">
-                {{ g.brand }} {{ g.model }}
-              </option>
+              <optgroup *ngIf="setupGrinders.length" label="My Setup">
+                <option *ngFor="let g of setupGrinders" [ngValue]="g.id">
+                  {{ g.brand }} {{ g.model }}
+                </option>
+              </optgroup>
+              <optgroup [label]="setupGrinders.length ? 'All Grinders' : ''">
+                <option *ngFor="let g of otherGrinders" [ngValue]="g.id">
+                  {{ g.brand }} {{ g.model }}
+                </option>
+              </optgroup>
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="advisor-brew-method">Brew Method</label>
             <select id="advisor-brew-method" [(ngModel)]="selectedBrewMethod" (ngModelChange)="onSelectionChange()">
               <option [ngValue]="undefined">Select method…</option>
-              <option *ngFor="let m of brewMethods" [ngValue]="m.value">{{ m.label }}</option>
+              <option *ngFor="let m of activeBrewMethods" [ngValue]="m.value">{{ m.label }}</option>
+              <ng-container *ngIf="fallbackBrewMethods.length">
+                <optgroup label="Other Methods">
+                  <option *ngFor="let m of fallbackBrewMethods" [ngValue]="m.value">{{ m.label }}</option>
+                </optgroup>
+              </ng-container>
             </select>
           </div>
         </div>
@@ -157,13 +177,33 @@ import { Coffee, Grinder, EstimateResponse, BrewMethod, BREW_METHOD_LABELS } fro
   `,
 })
 export class GrindAdvisorComponent implements OnInit {
-  private coffeeService      = inject(CoffeeService);
-  private grinderService     = inject(GrinderService);
+  private coffeeService       = inject(CoffeeService);
+  private grinderService      = inject(GrinderService);
   private grindAdvisorService = inject(GrindAdvisorService);
+  private collectionService   = inject(CollectionService);
 
-  coffees: Coffee[]   = [];
-  grinders: Grinder[] = [];
-  brewMethods = Object.entries(BREW_METHOD_LABELS).map(([value, label]) => ({ value: value as BrewMethod, label }));
+  allCoffees:  Coffee[]   = [];
+  allGrinders: Grinder[]  = [];
+  shelfCoffeeIds  = new Set<number>();
+  setupGrinderIds = new Set<number>();
+  setupBrewMethodValues = new Set<BrewMethod>();
+
+  allBrewMethods = Object.entries(BREW_METHOD_LABELS).map(([value, label]) => ({ value: value as BrewMethod, label }));
+
+  get shelfCoffees():  Coffee[]   { return this.allCoffees.filter(c => this.shelfCoffeeIds.has(c.id)); }
+  get otherCoffees():  Coffee[]   { return this.allCoffees.filter(c => !this.shelfCoffeeIds.has(c.id)); }
+  get setupGrinders(): Grinder[]  { return this.allGrinders.filter(g => this.setupGrinderIds.has(g.id)); }
+  get otherGrinders(): Grinder[]  { return this.allGrinders.filter(g => !this.setupGrinderIds.has(g.id)); }
+
+  get activeBrewMethods() {
+    if (this.setupBrewMethodValues.size === 0) return this.allBrewMethods;
+    return this.allBrewMethods.filter(m => this.setupBrewMethodValues.has(m.value));
+  }
+
+  get fallbackBrewMethods() {
+    if (this.setupBrewMethodValues.size === 0) return [];
+    return this.allBrewMethods.filter(m => !this.setupBrewMethodValues.has(m.value));
+  }
 
   selectedCoffeeId?: number;
   selectedGrinderId?: number;
@@ -179,18 +219,36 @@ export class GrindAdvisorComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.coffeeService.getAll().subscribe(c => this.coffees = c);
-    this.grinderService.getAll().subscribe(g => this.grinders = g);
+    forkJoin({
+      coffees:      this.coffeeService.getAll(),
+      grinders:     this.grinderService.getAll(),
+      shelf:        this.collectionService.getShelf(),
+      setupGrinders: this.collectionService.getSetupGrinders(),
+      setupMethods:  this.collectionService.getSetupBrewMethods(),
+    }).subscribe({
+      next: ({ coffees, grinders, shelf, setupGrinders, setupMethods }) => {
+        this.allCoffees  = coffees;
+        this.allGrinders = grinders;
+        this.shelfCoffeeIds  = new Set(shelf.map(s => s.coffeeId));
+        this.setupGrinderIds = new Set(setupGrinders.map(s => s.grinderId));
+        this.setupBrewMethodValues = new Set(setupMethods.map(s => s.brewMethod));
+      },
+      error: () => {
+        // Fallback: load coffees/grinders without collection data
+        this.coffeeService.getAll().subscribe(c => this.allCoffees = c);
+        this.grinderService.getAll().subscribe(g => this.allGrinders = g);
+      },
+    });
   }
 
   get selectedGrinder(): Grinder | undefined {
-    return this.grinders.find(g => g.id === this.selectedGrinderId);
+    return this.allGrinders.find(g => g.id === this.selectedGrinderId);
   }
 
   onSelectionChange() {
     this.result = undefined;
     this.error  = undefined;
-    this.selectedCoffee = this.coffees.find(c => c.id === this.selectedCoffeeId);
+    this.selectedCoffee = this.allCoffees.find(c => c.id === this.selectedCoffeeId);
   }
 
   formatNativeSetting(n: number): string {

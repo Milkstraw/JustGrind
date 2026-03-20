@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { GrinderService } from '../../services/services';
+import { forkJoin } from 'rxjs';
+import { GrinderService, CollectionService } from '../../services/services';
 import { Grinder } from '../../models/models';
 
 @Component({
@@ -23,6 +24,7 @@ import { Grinder } from '../../models/models';
         <div class="panel-head">
           <h2 class="panel-title">{{ g.brand }} {{ g.model }}</h2>
           <span class="status-pill" [attr.aria-label]="'Burr type: ' + g.burrType">{{ g.burrType }}</span>
+          <span *ngIf="setupIds.has(g.id)" class="status-pill s-active" style="font-size:9px;" aria-label="In your setup">Setup</span>
         </div>
         <div class="panel-body">
           <dl style="display:flex; gap:24px; margin-bottom: 14px; flex-wrap:wrap;">
@@ -47,6 +49,26 @@ import { Grinder } from '../../models/models';
               <dd style="font-size:12px; margin:0;">{{ g.isVerified ? 'Yes' : 'No' }}</dd>
             </div>
           </dl>
+
+          <!-- Setup toggle -->
+          <div style="margin-bottom:12px;">
+            <button
+              *ngIf="!setupIds.has(g.id)"
+              class="btn btn-sm"
+              (click)="addToSetup(g)"
+              [disabled]="pendingSetupId === g.id"
+              [attr.aria-label]="'Add ' + g.brand + ' ' + g.model + ' to My Setup'">
+              + My Setup
+            </button>
+            <button
+              *ngIf="setupIds.has(g.id)"
+              class="btn btn-sm"
+              (click)="removeFromSetup(g)"
+              [disabled]="pendingSetupId === g.id"
+              [attr.aria-label]="'Remove ' + g.brand + ' ' + g.model + ' from My Setup'">
+              − My Setup
+            </button>
+          </div>
 
           <!-- Calibrations -->
           <div *ngIf="g.calibrations?.length">
@@ -80,11 +102,42 @@ import { Grinder } from '../../models/models';
   `,
 })
 export class GrindersComponent implements OnInit {
-  private grinderService = inject(GrinderService);
+  private grinderService    = inject(GrinderService);
+  private collectionService = inject(CollectionService);
+
   grinders: Grinder[] = [];
+  setupIds = new Set<number>();
+  pendingSetupId?: number;
 
   ngOnInit() {
-    this.grinderService.getAll().subscribe(g => this.grinders = g);
+    forkJoin({
+      grinders: this.grinderService.getAll(),
+      setup:    this.collectionService.getSetupGrinders(),
+    }).subscribe({
+      next: ({ grinders, setup }) => {
+        this.grinders = grinders;
+        this.setupIds = new Set(setup.map(s => s.grinderId));
+      },
+      error: () => {
+        this.grinderService.getAll().subscribe(g => this.grinders = g);
+      },
+    });
+  }
+
+  addToSetup(g: Grinder): void {
+    this.pendingSetupId = g.id;
+    this.collectionService.addGrinderToSetup(g.id).subscribe({
+      next:  () => { this.setupIds.add(g.id); this.pendingSetupId = undefined; },
+      error: () => { this.pendingSetupId = undefined; },
+    });
+  }
+
+  removeFromSetup(g: Grinder): void {
+    this.pendingSetupId = g.id;
+    this.collectionService.removeGrinderFromSetup(g.id).subscribe({
+      next:  () => { this.setupIds.delete(g.id); this.pendingSetupId = undefined; },
+      error: () => { this.pendingSetupId = undefined; },
+    });
   }
 
   formatBrewMethod(m: string): string {

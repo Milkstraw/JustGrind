@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CoffeeService } from '../../services/services';
+import { forkJoin } from 'rxjs';
+import { CoffeeService, CollectionService } from '../../services/services';
 import { Coffee, ProcessingMethod } from '../../models/models';
 
 @Component({
@@ -69,17 +70,39 @@ import { Coffee, ProcessingMethod } from '../../models/models';
             <th scope="col">Roast</th>
             <th scope="col">Variety</th>
             <th scope="col">Notes</th>
+            <th scope="col"><span class="sr-only">Shelf</span></th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let c of filteredCoffees">
-            <td><strong>{{ c.name }}</strong></td>
+            <td>
+              <strong>{{ c.name }}</strong>
+              <span *ngIf="shelfIds.has(c.id)" class="status-pill s-active" style="margin-left:6px; font-size:9px;" aria-label="On your shelf">Shelf</span>
+            </td>
             <td>{{ c.roaster }}</td>
             <td>{{ c.originRegion ? c.originRegion + ', ' : '' }}{{ c.originCountry }}</td>
             <td><span class="status-pill">{{ c.processingMethod }}</span></td>
             <td>{{ roastLabel(c.roastLevel) }} ({{ c.roastLevel }})</td>
             <td style="color:#666;">{{ c.variety || '—' }}</td>
             <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#666;">{{ c.tastingNotes || '—' }}</td>
+            <td>
+              <button
+                *ngIf="!shelfIds.has(c.id)"
+                class="btn btn-sm"
+                (click)="addToShelf(c)"
+                [disabled]="pendingShelfId === c.id"
+                [attr.aria-label]="'Add ' + c.name + ' to shelf'">
+                + Shelf
+              </button>
+              <button
+                *ngIf="shelfIds.has(c.id)"
+                class="btn btn-sm"
+                (click)="removeFromShelf(c)"
+                [disabled]="pendingShelfId === c.id"
+                [attr.aria-label]="'Remove ' + c.name + ' from shelf'">
+                − Shelf
+              </button>
+            </td>
           </tr>
           <tr *ngIf="filteredCoffees.length === 0">
             <td colspan="7" style="text-align:center; color:#999; padding:20px;">No coffees match the current filters.</td>
@@ -91,10 +114,13 @@ import { Coffee, ProcessingMethod } from '../../models/models';
   `,
 })
 export class CoffeesComponent implements OnInit {
-  private coffeeService = inject(CoffeeService);
+  private coffeeService     = inject(CoffeeService);
+  private collectionService = inject(CollectionService);
 
   allCoffees:      Coffee[] = [];
   filteredCoffees: Coffee[] = [];
+  shelfIds = new Set<number>();
+  pendingShelfId?: number;
   loading = true;
 
   search           = '';
@@ -106,10 +132,37 @@ export class CoffeesComponent implements OnInit {
   processingMethods: ProcessingMethod[] = ['Washed', 'Natural', 'Honey', 'Anaerobic', 'WetHulled', 'Other'];
 
   ngOnInit() {
-    this.coffeeService.getAll().subscribe(c => {
-      this.allCoffees = c;
-      this.filteredCoffees = c;
-      this.loading = false;
+    forkJoin({
+      coffees: this.coffeeService.getAll(),
+      shelf:   this.collectionService.getShelf(),
+    }).subscribe({
+      next: ({ coffees, shelf }) => {
+        this.allCoffees      = coffees;
+        this.filteredCoffees = coffees;
+        this.shelfIds        = new Set(shelf.map(s => s.coffeeId));
+        this.loading         = false;
+      },
+      error: () => {
+        this.coffeeService.getAll().subscribe(c => {
+          this.allCoffees = c; this.filteredCoffees = c; this.loading = false;
+        });
+      },
+    });
+  }
+
+  addToShelf(coffee: Coffee): void {
+    this.pendingShelfId = coffee.id;
+    this.collectionService.addToShelf(coffee.id).subscribe({
+      next:  () => { this.shelfIds.add(coffee.id); this.pendingShelfId = undefined; },
+      error: () => { this.pendingShelfId = undefined; },
+    });
+  }
+
+  removeFromShelf(coffee: Coffee): void {
+    this.pendingShelfId = coffee.id;
+    this.collectionService.removeFromShelf(coffee.id).subscribe({
+      next:  () => { this.shelfIds.delete(coffee.id); this.pendingShelfId = undefined; },
+      error: () => { this.pendingShelfId = undefined; },
     });
   }
 
