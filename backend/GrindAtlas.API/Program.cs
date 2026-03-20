@@ -10,11 +10,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var dbHost     = Environment.GetEnvironmentVariable("DB_HOST");
+var dbHost     = Environment.GetEnvironmentVariable("DB_HOST")     ?? throw new InvalidOperationException("DB_HOST env var is not set");
+var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? throw new InvalidOperationException("DB_PASSWORD env var is not set");
 var dbName     = Environment.GetEnvironmentVariable("DB_NAME") ?? "neondb";
 var dbUser     = Environment.GetEnvironmentVariable("DB_USER") ?? "neondb_owner";
-var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
-var connStr    = $"Host={dbHost};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true";
+var connStr    = $"Host={dbHost};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require";
 
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(connStr));
 
