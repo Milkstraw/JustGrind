@@ -32,6 +32,7 @@ public interface IEmailService
     Task SendWelcomeAsync(string toEmail, string displayName);
     Task SendVerificationAsync(string toEmail, string displayName, string confirmUrl);
     Task SendPasswordResetAsync(string toEmail, string displayName, string resetUrl);
+    Task SendReEngagementAsync(string toEmail, string displayName, int daysSinceLastLog);
     Task SendNewsletterAsync(IEnumerable<string> recipients, string subject, string htmlBody);
     Task SendSupportNotificationAsync(string fromEmail, string fromName, string subject, string message);
 }
@@ -45,13 +46,20 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
     // ── Public methods ────────────────────────────────────────────────────────
 
     public Task SendWelcomeAsync(string toEmail, string displayName) =>
-        SendAsync(toEmail, "Welcome to GrindAtlas!", WelcomeBody(displayName));
+        SendAsync(toEmail, "Welcome to GrindAtlas — your grinder awaits",
+            EmailTemplates.Welcome(displayName, _s.FrontendBaseUrl));
 
     public Task SendVerificationAsync(string toEmail, string displayName, string confirmUrl) =>
-        SendAsync(toEmail, "Verify your GrindAtlas email", VerifyBody(displayName, confirmUrl));
+        SendAsync(toEmail, "Confirm your GrindAtlas email address",
+            EmailTemplates.Verify(displayName, confirmUrl));
 
     public Task SendPasswordResetAsync(string toEmail, string displayName, string resetUrl) =>
-        SendAsync(toEmail, "Reset your GrindAtlas password", ResetBody(displayName, resetUrl));
+        SendAsync(toEmail, "GrindAtlas password reset",
+            EmailTemplates.PasswordReset(displayName, resetUrl));
+
+    public Task SendReEngagementAsync(string toEmail, string displayName, int daysSinceLastLog) =>
+        SendAsync(toEmail, $"Your beans are getting stale — it's been {daysSinceLastLog} days",
+            EmailTemplates.ReEngagement(displayName, daysSinceLastLog, _s.FrontendBaseUrl));
 
     public async Task SendNewsletterAsync(IEnumerable<string> recipients, string subject, string htmlBody)
     {
@@ -60,8 +68,7 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
         {
             try
             {
-                var msg = BuildMessage(email, subject, htmlBody);
-                await client.SendAsync(msg);
+                await client.SendAsync(BuildMessage(email, subject, htmlBody));
             }
             catch (Exception ex)
             {
@@ -79,9 +86,8 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
             return Task.CompletedTask;
         }
 
-        var body = SupportBody(fromName, fromEmail, message);
-        var msg  = BuildMessage(_s.SupportAddress, $"[Support] {subject}", body);
-        // Reply-To so IT can reply directly to the user
+        var html = SupportBody(fromName, fromEmail, message);
+        var msg  = BuildMessage(_s.SupportAddress, $"[Support] {subject}", html);
         msg.ReplyTo.Add(new MailboxAddress(fromName, fromEmail));
         return SendMessageAsync(msg);
     }
@@ -89,10 +95,7 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
     // ── Core helpers ──────────────────────────────────────────────────────────
 
     private async Task SendAsync(string toEmail, string subject, string htmlBody)
-    {
-        var msg = BuildMessage(toEmail, subject, htmlBody);
-        await SendMessageAsync(msg);
-    }
+        => await SendMessageAsync(BuildMessage(toEmail, subject, htmlBody));
 
     private async Task SendMessageAsync(MimeMessage msg)
     {
@@ -104,7 +107,7 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
 
     private async Task<SmtpClient> ConnectAsync()
     {
-        var client = new SmtpClient();
+        var client  = new SmtpClient();
         var options = _s.UseStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.SslOnConnect;
         await client.ConnectAsync(_s.Host, _s.Port, options);
         await client.AuthenticateAsync(_s.Username, _s.Password);
@@ -117,59 +120,51 @@ public class SmtpEmailService(IOptions<EmailSettings> opts, ILogger<SmtpEmailSer
         msg.From.Add(new MailboxAddress(_s.FromName, _s.Username));
         msg.To.Add(MailboxAddress.Parse(toEmail));
         msg.Subject = subject;
-        msg.Body = new TextPart("html") { Text = htmlBody };
+        msg.Body    = new TextPart("html") { Text = htmlBody };
         return msg;
     }
 
-    // ── Email templates ───────────────────────────────────────────────────────
+    // ── Support email (plain template, not in EmailTemplates) ─────────────────
 
-    private static string WelcomeBody(string name) => $"""
-        <div style="font-family:sans-serif;max-width:600px;margin:auto">
-          <h2 style="color:#5d4037">Welcome to GrindAtlas, {HtmlEncode(name)}!</h2>
-          <p>Your account is ready. Start tracking your grinds and discovering the perfect setting for every coffee.</p>
-          <p style="color:#888;font-size:12px">Happy brewing,<br/>The GrindAtlas Team</p>
-        </div>
+    private static string SupportBody(string fromName, string fromEmail, string message) =>
+        $$"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"></head>
+        <body style="margin:0;padding:0;background-color:#f5f3ee;font-family:'Courier New',Courier,monospace;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f3ee" style="background-color:#f5f3ee;">
+            <tr><td align="center" style="padding:32px 16px;">
+              <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+                <tr>
+                  <td bgcolor="#0a0a0a" style="background-color:#0a0a0a;padding:24px 28px;border-top:1.5px solid #0a0a0a;border-left:1.5px solid #0a0a0a;border-right:4px solid #0a0a0a;border-bottom:4px solid #0a0a0a;">
+                    <p style="margin:0;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:#d4d0c8;font-family:'Courier New',Courier,monospace;">GRINDATLAS &middot; SUPPORT</p>
+                    <p style="margin:10px 0 0;font-size:22px;font-weight:700;letter-spacing:-0.02em;color:#f5f3ee;font-family:'Courier New',Courier,monospace;line-height:1.15;">NEW SUPPORT<br/>REQUEST.</p>
+                  </td>
+                </tr>
+                <tr><td bgcolor="#f5f3ee" style="background-color:#f5f3ee;height:12px;"></td></tr>
+                <tr>
+                  <td bgcolor="#ffffff" style="background-color:#ffffff;padding:28px;border-top:1.5px solid #0a0a0a;border-left:1.5px solid #0a0a0a;border-right:4px solid #0a0a0a;border-bottom:4px solid #0a0a0a;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;background-color:#f5f3ee;border-top:1.5px solid #0a0a0a;border-left:1.5px solid #0a0a0a;border-right:4px solid #0a0a0a;border-bottom:4px solid #0a0a0a;">
+                      <tr>
+                        <td width="50%" style="padding:14px 16px;border-right:1px solid #d4d0c8;vertical-align:top;">
+                          <p style="margin:0 0 6px;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#666;font-family:'Courier New',Courier,monospace;">FROM</p>
+                          <p style="margin:0;font-size:13px;font-weight:700;color:#0a0a0a;font-family:'Courier New',Courier,monospace;">{{System.Net.WebUtility.HtmlEncode(fromName)}}</p>
+                          <p style="margin:3px 0 0;font-size:11px;color:#666;font-family:'Courier New',Courier,monospace;">{{System.Net.WebUtility.HtmlEncode(fromEmail)}}</p>
+                        </td>
+                        <td width="50%" style="padding:14px 16px;vertical-align:top;">
+                          <p style="margin:0 0 6px;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#666;font-family:'Courier New',Courier,monospace;">REPLY-TO</p>
+                          <p style="margin:0;font-size:11px;color:#0a0a0a;font-family:'Courier New',Courier,monospace;">Hit Reply to respond directly to the sender.</p>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:0 0 10px;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#666;font-family:'Courier New',Courier,monospace;">MESSAGE</p>
+                    <p style="margin:0;font-size:12px;line-height:1.75;color:#0a0a0a;font-family:'Courier New',Courier,monospace;white-space:pre-wrap;">{{System.Net.WebUtility.HtmlEncode(message)}}</p>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
         """;
-
-    private static string VerifyBody(string name, string confirmUrl) => $"""
-        <div style="font-family:sans-serif;max-width:600px;margin:auto">
-          <h2 style="color:#5d4037">Verify your email</h2>
-          <p>Hi {HtmlEncode(name)}, please click the button below to confirm your email address.</p>
-          <p>
-            <a href="{confirmUrl}"
-               style="background:#5d4037;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;display:inline-block">
-              Verify Email
-            </a>
-          </p>
-          <p>Or copy this link:<br/><a href="{confirmUrl}">{confirmUrl}</a></p>
-          <p style="color:#888;font-size:12px">This link expires in 24 hours. If you did not create a GrindAtlas account, you can ignore this email.</p>
-        </div>
-        """;
-
-    private static string ResetBody(string name, string resetUrl) => $"""
-        <div style="font-family:sans-serif;max-width:600px;margin:auto">
-          <h2 style="color:#5d4037">Reset your password</h2>
-          <p>Hi {HtmlEncode(name)}, we received a request to reset the password for your GrindAtlas account.</p>
-          <p>
-            <a href="{resetUrl}"
-               style="background:#5d4037;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;display:inline-block">
-              Reset Password
-            </a>
-          </p>
-          <p>Or copy this link:<br/><a href="{resetUrl}">{resetUrl}</a></p>
-          <p style="color:#888;font-size:12px">This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
-        </div>
-        """;
-
-    private static string SupportBody(string fromName, string fromEmail, string message) => $"""
-        <div style="font-family:sans-serif;max-width:600px;margin:auto">
-          <h2 style="color:#5d4037">New Support Request</h2>
-          <p><strong>From:</strong> {HtmlEncode(fromName)} &lt;{HtmlEncode(fromEmail)}&gt;</p>
-          <hr/>
-          <p style="white-space:pre-wrap">{HtmlEncode(message)}</p>
-        </div>
-        """;
-
-    private static string HtmlEncode(string s) =>
-        System.Net.WebUtility.HtmlEncode(s);
 }
