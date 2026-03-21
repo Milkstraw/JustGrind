@@ -86,6 +86,12 @@ public record AdminAuditLogResponse(
     DateTime Timestamp
 );
 
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string UserId, string Token, string NewPassword);
+
+public record ContactRequest(string Name, string Email, string Subject, string Message);
+public record NewsletterRequest(List<string> Recipients, string Subject, string HtmlBody);
+
 public record BrewRecipeStepRequest(int StepOrder, string Instruction, int DurationS, decimal? PourWaterG);
 
 public record CreateBrewRecipeRequest(
