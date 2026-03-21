@@ -7,6 +7,7 @@ import {
   AuthUser, LoginRequest, RegisterRequest,
   BrewRecipe, CreateBrewRecipeRequest,
   UserCoffee, UserGrinder, UserBrewMethod, CoffeeBag, OpenCoffeeBagRequest, FreshnessInfo,
+  AuditLogPage,
 } from '../models/models';
 
 const BASE = 'https://grindatlas.onrender.com/api';
@@ -92,8 +93,9 @@ export class AuthService {
   );
 
   readonly currentUser = this._user.asReadonly();
-  readonly isLoggedIn = computed(() => this._user() !== null);
-  readonly token = computed(() => this._user()?.token ?? null);
+  readonly isLoggedIn  = computed(() => this._user() !== null);
+  readonly isAdmin     = computed(() => this._user()?.isAdmin === true);
+  readonly token       = computed(() => this._user()?.token ?? null);
 
   login(req: LoginRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${BASE}/auth/login`, req).pipe(
@@ -228,5 +230,31 @@ export class GrindAdvisorService {
     return this.http.post(`${BASE}/grind-advisor/estimate/${estimateId}/confirm`, {
       confirmedSetting,
     });
+  }
+}
+
+// ── Admin Service ──────────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class AdminService {
+  private http = inject(HttpClient);
+
+  getAuditLog(filters?: {
+    actor?: string;
+    action?: string;
+    entityType?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  }): Observable<AuditLogPage> {
+    let params = new HttpParams();
+    if (filters?.actor)      params = params.set('actor',      filters.actor);
+    if (filters?.action)     params = params.set('action',     filters.action);
+    if (filters?.entityType) params = params.set('entityType', filters.entityType);
+    if (filters?.from)       params = params.set('from',       filters.from);
+    if (filters?.to)         params = params.set('to',         filters.to);
+    if (filters?.page)       params = params.set('page',       filters.page);
+    if (filters?.pageSize)   params = params.set('pageSize',   filters.pageSize);
+    return this.http.get<AuditLogPage>(`${BASE}/admin/audit-log`, { params });
   }
 }

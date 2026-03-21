@@ -35,6 +35,7 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(result.Errors.Select(e => e.Description));
 
+        return Ok(await GenerateToken(user));
         // Send welcome email (fire-and-forget; don't block registration on email failure)
         _ = SendVerificationEmailAsync(user);
 
@@ -50,8 +51,13 @@ public class AuthController(
         if (user is null || !await userManager.CheckPasswordAsync(user, req.Password))
             return Unauthorized("Invalid email or password.");
 
-        return Ok(GenerateToken(user));
+        return Ok(await GenerateToken(user));
     }
+
+    private async Task<AuthResponse> GenerateToken(ApplicationUser user)
+    {
+        var roles   = await userManager.GetRolesAsync(user);
+        var isAdmin = roles.Contains("Admin");
 
     // ── Email verification ────────────────────────────────────────────────────
 
@@ -129,12 +135,15 @@ public class AuthController(
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email!),
-            new Claim("displayName", user.DisplayName ?? ""),
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Email, user.Email!),
+            new("displayName", user.DisplayName ?? ""),
         };
+
+        foreach (var role in roles)
+            claims.Add(new Claim(ClaimTypes.Role, role));
 
         var token = new JwtSecurityToken(
             issuer:            config["Jwt:Issuer"],
@@ -147,7 +156,8 @@ public class AuthController(
         return new AuthResponse(
             new JwtSecurityTokenHandler().WriteToken(token),
             user.Email!,
-            user.DisplayName
+            user.DisplayName,
+            isAdmin
         );
     }
 }

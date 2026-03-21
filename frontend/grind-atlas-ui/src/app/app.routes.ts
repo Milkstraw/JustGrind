@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
+import { adminGuard } from './admin.guard';
 import { brewGuard } from './components/recipes/recipe-brew.component';
 
 export const routes: Routes = [
@@ -101,6 +102,20 @@ export const routes: Routes = [
     path: 'not-found',
     loadComponent: () =>
       import('./components/not-found/not-found.component').then(m => m.NotFoundComponent),
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./components/admin/admin-shell.component').then(m => m.AdminShellComponent),
+    canActivate: [adminGuard],
+    children: [
+      { path: '', redirectTo: 'audit-log', pathMatch: 'full' },
+      {
+        path: 'audit-log',
+        loadComponent: () =>
+          import('./components/admin/audit-log.component').then(m => m.AuditLogComponent),
+      },
+    ],
   },
   { path: '**', redirectTo: 'not-found' },
 ];

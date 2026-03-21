@@ -70,7 +70,21 @@ public record ConfirmEstimateRequest(decimal ConfirmedSetting);
 
 public record RegisterRequest(string Email, string Password, string? DisplayName);
 public record LoginRequest(string Email, string Password);
-public record AuthResponse(string Token, string Email, string? DisplayName);
+public record AuthResponse(string Token, string Email, string? DisplayName, bool IsAdmin);
+
+public record AdminAuditLogResponse(
+    int Id,
+    string ActorId,
+    string ActorEmail,
+    string Action,
+    string EntityType,
+    string? EntityId,
+    string? OldValue,
+    string? NewValue,
+    string? Notes,
+    string? IpAddress,
+    DateTime Timestamp
+);
 
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string UserId, string Token, string NewPassword);
