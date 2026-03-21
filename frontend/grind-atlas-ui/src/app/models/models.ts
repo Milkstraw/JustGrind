@@ -240,6 +240,29 @@ export interface AuthUser {
   email: string;
   displayName?: string | null;
   token: string;
+  isAdmin: boolean;
+}
+
+// admin
+export interface AdminAuditLog {
+  id: number;
+  actorId: string;
+  actorEmail: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  oldValue?: string;
+  newValue?: string;
+  notes?: string;
+  ipAddress?: string;
+  timestamp: string;
+}
+
+export interface AuditLogPage {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: AdminAuditLog[];
 }
 
 export interface LoginRequest {

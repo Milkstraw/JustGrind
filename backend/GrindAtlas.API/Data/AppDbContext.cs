@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<UserGrinder> UserGrinders => Set<UserGrinder>();
     public DbSet<UserBrewMethod> UserBrewMethods => Set<UserBrewMethod>();
     public DbSet<CoffeeBag> CoffeeBags => Set<CoffeeBag>();
+    public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
