@@ -53,6 +53,8 @@ builder.Services.AddAuthorization(opt =>
         .RequireAuthenticatedUser()
         .Build());
 builder.Services.AddScoped<GrindEstimatorService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
