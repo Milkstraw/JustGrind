@@ -35,11 +35,10 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(result.Errors.Select(e => e.Description));
 
-        return Ok(await GenerateToken(user));
         // Send welcome email (fire-and-forget; don't block registration on email failure)
         _ = SendVerificationEmailAsync(user);
 
-        return Ok(GenerateToken(user));
+        return Ok(await GenerateToken(user));
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
@@ -53,11 +52,6 @@ public class AuthController(
 
         return Ok(await GenerateToken(user));
     }
-
-    private async Task<AuthResponse> GenerateToken(ApplicationUser user)
-    {
-        var roles   = await userManager.GetRolesAsync(user);
-        var isAdmin = roles.Contains("Admin");
 
     // ── Email verification ────────────────────────────────────────────────────
 
@@ -130,8 +124,11 @@ public class AuthController(
         await emailService.SendVerificationAsync(user.Email!, user.DisplayName ?? user.Email!, confirmUrl);
     }
 
-    private AuthResponse GenerateToken(ApplicationUser user)
+    private async Task<AuthResponse> GenerateToken(ApplicationUser user)
     {
+        var roles   = await userManager.GetRolesAsync(user);
+        var isAdmin = roles.Contains("Admin");
+
         var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

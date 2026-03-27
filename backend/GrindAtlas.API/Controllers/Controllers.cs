@@ -41,7 +41,7 @@ public class CoffeesController(AppDbContext ctx) : ControllerBase
         return coffee is null ? NotFound() : Ok(coffee);
     }
 
-    [HttpPost]
+    [HttpPost, AllowAnonymous]
     public IActionResult Create(Coffee coffee)
     {
         coffee.CreatedAt = DateTime.UtcNow;
@@ -83,7 +83,7 @@ public class GrindersController(AppDbContext ctx) : ControllerBase
     public IActionResult GetCalibrations(int id) =>
         Ok(ctx.GrinderCalibrations.Where(c => c.GrinderId == id).ToList());
 
-    [HttpPost]
+    [HttpPost, AllowAnonymous]
     public IActionResult Create(Grinder grinder)
     {
         ctx.Grinders.Add(grinder);
