@@ -11,7 +11,7 @@ const REVIEWS = [
   { name: 'Elena R.',   role: 'Home Barista',           text: 'Switched from a Baratza to a Comandante and had zero wasted shots. The cross-grinder estimates are magic.' },
   { name: 'Tom W.',     role: 'Competition Barista',    text: 'When every point counts, you need data. Grind Atlas gives me that data in a way I can actually act on.' },
   { name: 'Aisha M.',   role: 'Subscription Roaster',   text: 'We share this with every subscriber. It turns guessing into a skill they keep building on.' },
-  { name: 'Baratza Sette 270', role: 'Grinder', text: 'Whirrr... grrrk grrrk grrrk CLUNK whirrr. Grk. Grk grk grk grk WHIRRRRRR clunk. ★★★★★' },
+  { name: 'Baratza S.',        role: 'Grinder',             text: 'Whirrr... grrrk grrrk grrrk CLUNK whirrr. Grk. Grk grk grk grk WHIRRRRRR clunk. ★★★★★' },
 ];
 
 @Component({
