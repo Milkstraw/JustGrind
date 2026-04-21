@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CoffeeService, GrinderService, GrindLogService, RecipeService } from '../../services/services';
+import { logError } from '../../utils/logger';
 
 @Component({
   selector: 'app-home',
@@ -15,19 +16,19 @@ import { CoffeeService, GrinderService, GrindLogService, RecipeService } from '.
     <div class="stats-row" style="margin-bottom: 28px;">
       <div class="stat-card">
         <div class="stat-label">Coffees</div>
-        <div class="stat-num">{{ coffeeCount ?? '—' }}</div>
+        <div class="stat-num">{{ statsLoading ? '…' : (coffeeCount ?? '—') }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Grinders</div>
-        <div class="stat-num">{{ grinderCount ?? '—' }}</div>
+        <div class="stat-num">{{ statsLoading ? '…' : (grinderCount ?? '—') }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Grind Logs</div>
-        <div class="stat-num">{{ logCount ?? '—' }}</div>
+        <div class="stat-num">{{ statsLoading ? '…' : (logCount ?? '—') }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Recipes</div>
-        <div class="stat-num">{{ recipeCount ?? '—' }}</div>
+        <div class="stat-num">{{ statsLoading ? '…' : (recipeCount ?? '—') }}</div>
       </div>
     </div>
 
@@ -108,6 +109,7 @@ export class HomeComponent implements OnInit {
   grinderCount?: number;
   logCount?: number;
   recipeCount?: number;
+  statsLoading = true;
 
   ngOnInit() {
     forkJoin({
@@ -115,11 +117,22 @@ export class HomeComponent implements OnInit {
       grinders: this.grinderService.getAll(),
       logs:     this.logService.getAll(),
       recipes:  this.recipeService.getAll(),
-    }).subscribe(({ coffees, grinders, logs, recipes }) => {
-      this.coffeeCount  = coffees.length;
-      this.grinderCount = grinders.length;
-      this.logCount     = logs.length;
-      this.recipeCount  = recipes.length;
+    }).subscribe({
+      next: ({ coffees, grinders, logs, recipes }) => {
+        this.coffeeCount  = coffees.length;
+        this.grinderCount = grinders.length;
+        this.logCount     = logs.length;
+        this.recipeCount  = recipes.length;
+        this.statsLoading = false;
+      },
+      error: (err) => {
+        logError('HomeComponent.ngOnInit', err, {
+          url: 'forkJoin(coffees,grinders,logs,recipes)',
+          status: err?.status,
+          body: err?.error,
+        });
+        this.statsLoading = false;
+      },
     });
   }
 }
