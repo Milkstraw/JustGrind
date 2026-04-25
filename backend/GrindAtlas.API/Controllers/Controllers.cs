@@ -276,9 +276,10 @@ public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService esti
     {
         try
         {
-            var result = estimator.Estimate(req.CoffeeId, req.TargetGrinderId, req.BrewMethod);
-            var coffee  = ctx.Coffees.Find(req.CoffeeId)!;
-            var grinder = ctx.Grinders.Find(req.TargetGrinderId)!;
+            var result  = estimator.Estimate(req.CoffeeId, req.TargetGrinderId, req.BrewMethod);
+            var coffee  = ctx.Coffees.Find(req.CoffeeId);
+            var grinder = ctx.Grinders.Find(req.TargetGrinderId);
+            if (coffee is null || grinder is null) return NotFound("Coffee or grinder not found.");
 
             var response = new EstimateResponse(
                 req.CoffeeId,  coffee.Name,
@@ -314,7 +315,8 @@ public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService esti
 
             return Ok(response);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (ArgumentException ex)         { return BadRequest(ex.Message); }
+        catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
     }
 
     [HttpPost("estimate/{estimateId}/confirm")]
