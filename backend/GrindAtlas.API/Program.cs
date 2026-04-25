@@ -233,6 +233,13 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(adminUser, "Admin");
 }
 
+app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
+{
+    ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+    var feature = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+    if (feature?.Error is not null)
+        await ctx.Response.WriteAsync(feature.Error.Message);
+}));
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors();
