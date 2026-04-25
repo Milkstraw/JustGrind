@@ -214,7 +214,7 @@ export class LandingComponent implements OnInit {
   private router = inject(Router);
 
   readonly reviews = REVIEWS;
-  readonly totalSlides = 8;
+  readonly totalSlides = REVIEWS.length;
   currentSlide = signal(0);
   isMobile = signal(window.innerWidth <= 700);
 
