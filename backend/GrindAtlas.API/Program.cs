@@ -233,6 +233,7 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(adminUser, "Admin");
 }
 
+app.UseCors();
 app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
 {
     ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
@@ -242,7 +243,6 @@ app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
 }));
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
