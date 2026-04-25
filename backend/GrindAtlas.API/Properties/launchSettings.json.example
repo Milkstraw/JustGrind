@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "GrindAtlas.API": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_HOST": "your-neon-host.neon.tech",
+        "DB_PASSWORD": "your-neon-password",
+        "DB_NAME": "neondb",
+        "DB_USER": "neondb_owner"
+      }
+    }
+  }
+}
