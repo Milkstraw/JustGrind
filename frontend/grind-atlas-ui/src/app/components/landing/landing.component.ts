@@ -3,15 +3,15 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/services';
 
 const REVIEWS = [
-  { name: 'Marcus T.',  role: 'Home Barista',          text: 'Finally stopped wasting beans every time I switch coffees. Grind Advisor got me dialed in on the first try.' },
+  { name: 'Marcus T.',  role: 'Home Barista',           text: 'Finally stopped wasting beans every time I switch coffees. Grind Advisor got me dialed in on the first try.' },
   { name: 'Priya N.',   role: 'Coffee Roaster',         text: 'I recommend this to every customer who buys our single origins. It speaks their grinder\'s language.' },
   { name: 'James C.',   role: 'Café Owner',             text: 'We run three different grinders and this keeps settings consistent across all of them. Indispensable.' },
   { name: 'Simone B.',  role: 'Pour Over Enthusiast',   text: 'The NGI concept finally made sense to me after using this app. My V60 has never tasted better.' },
   { name: 'David K.',   role: 'Specialty Importer',     text: 'I\'ve tried every grind app out there. This is the only one that actually learns from your history.' },
+  { name: 'Baratza S.', role: 'Grinder',                text: 'Whirrr... grrrk grrrk grrrk CLUNK whirrr. Grk. Grk grk grk grk WHIRRRRRR clunk. ★★★★★' },
   { name: 'Elena R.',   role: 'Home Barista',           text: 'Switched from a Baratza to a Comandante and had zero wasted shots. The cross-grinder estimates are magic.' },
   { name: 'Tom W.',     role: 'Competition Barista',    text: 'When every point counts, you need data. Grind Atlas gives me that data in a way I can actually act on.' },
   { name: 'Aisha M.',   role: 'Subscription Roaster',   text: 'We share this with every subscriber. It turns guessing into a skill they keep building on.' },
-  { name: 'Baratza S.',        role: 'Grinder',             text: 'Whirrr... grrrk grrrk grrrk CLUNK whirrr. Grk. Grk grk grk grk WHIRRRRRR clunk. ★★★★★' },
 ];
 
 @Component({
