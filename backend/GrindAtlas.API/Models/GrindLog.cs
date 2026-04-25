@@ -13,6 +13,7 @@ public class GrindLog
     public int? ExtractionTimeS { get; set; }
     public decimal? TdsPercent { get; set; }
     public int? Rating { get; set; }               // 1–5
+    public int? ExtractionFeedback { get; set; }   // -3 (very under) to +3 (very over)
     public string? Notes { get; set; }
     public DateOnly? BrewDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

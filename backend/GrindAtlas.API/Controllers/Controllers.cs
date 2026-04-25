@@ -5,6 +5,7 @@ using GrindAtlas.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 // ── Coffees ──────────────────────────────────────────────────────────────────
@@ -40,7 +41,7 @@ public class CoffeesController(AppDbContext ctx) : ControllerBase
         return coffee is null ? NotFound() : Ok(coffee);
     }
 
-    [HttpPost]
+    [HttpPost, AllowAnonymous]
     public IActionResult Create(Coffee coffee)
     {
         coffee.CreatedAt = DateTime.UtcNow;
@@ -82,7 +83,7 @@ public class GrindersController(AppDbContext ctx) : ControllerBase
     public IActionResult GetCalibrations(int id) =>
         Ok(ctx.GrinderCalibrations.Where(c => c.GrinderId == id).ToList());
 
-    [HttpPost]
+    [HttpPost, AllowAnonymous]
     public IActionResult Create(Grinder grinder)
     {
         ctx.Grinders.Add(grinder);
@@ -115,24 +116,41 @@ public class GrindLogsController(AppDbContext ctx, GrindEstimatorService estimat
     public IActionResult Create(AddGrindLogRequest req)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Duplicate detection: same recipe + user + today
+        if (req.RecipeId.HasValue)
+        {
+            var duplicate = ctx.GrindLogs.Any(l =>
+                l.UserId == userId &&
+                l.RecipeId == req.RecipeId &&
+                l.BrewDate == today);
+            if (duplicate)
+                return Conflict("A session for this recipe was already saved today. Remove the existing log first if you want to re-save.");
+        }
+
+        if (req.ExtractionFeedback.HasValue && (req.ExtractionFeedback < -3 || req.ExtractionFeedback > 3))
+            return BadRequest("ExtractionFeedback must be between -3 and 3.");
+
         var notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
         var ngi = estimator.NativeToNgi(req.NativeSetting, req.GrinderId);
         var log = new GrindLog
         {
-            CoffeeId         = req.CoffeeId,
-            GrinderId        = req.GrinderId,
-            BrewMethod       = req.BrewMethod,
-            NativeSetting    = req.NativeSetting,
-            NgiNormalized    = ngi,
-            DoseG            = req.DoseG,
-            YieldG           = req.YieldG,
-            ExtractionTimeS  = req.ExtractionTimeS,
-            Rating           = req.Rating,
-            Notes            = notes,
-            RecipeId         = req.RecipeId,
-            BrewDate         = DateOnly.FromDateTime(DateTime.UtcNow),
-            CreatedAt        = DateTime.UtcNow,
-            UserId           = userId,
+            CoffeeId           = req.CoffeeId,
+            GrinderId          = req.GrinderId,
+            BrewMethod         = req.BrewMethod,
+            NativeSetting      = req.NativeSetting,
+            NgiNormalized      = ngi,
+            DoseG              = req.DoseG,
+            YieldG             = req.YieldG,
+            ExtractionTimeS    = req.ExtractionTimeS,
+            Rating             = req.Rating,
+            ExtractionFeedback = req.ExtractionFeedback,
+            Notes              = notes,
+            RecipeId           = req.RecipeId,
+            BrewDate           = today,
+            CreatedAt          = DateTime.UtcNow,
+            UserId             = userId,
         };
         ctx.GrindLogs.Add(log);
         ctx.SaveChanges();
@@ -258,9 +276,10 @@ public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService esti
     {
         try
         {
-            var result = estimator.Estimate(req.CoffeeId, req.TargetGrinderId, req.BrewMethod);
-            var coffee  = ctx.Coffees.Find(req.CoffeeId)!;
-            var grinder = ctx.Grinders.Find(req.TargetGrinderId)!;
+            var result  = estimator.Estimate(req.CoffeeId, req.TargetGrinderId, req.BrewMethod);
+            var coffee  = ctx.Coffees.Find(req.CoffeeId);
+            var grinder = ctx.Grinders.Find(req.TargetGrinderId);
+            if (coffee is null || grinder is null) return NotFound("Coffee or grinder not found.");
 
             var response = new EstimateResponse(
                 req.CoffeeId,  coffee.Name,
@@ -296,7 +315,8 @@ public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService esti
 
             return Ok(response);
         }
-        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (ArgumentException ex)         { return BadRequest(ex.Message); }
+        catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
     }
 
     [HttpPost("estimate/{estimateId}/confirm")]
@@ -320,5 +340,54 @@ public class GrindAdvisorController(AppDbContext ctx, GrindEstimatorService esti
         if (a is null || b is null) return NotFound();
         var sim = estimator.ComputeSimilarity(a, b);
         return Ok(new { CoffeeA = a.Name, CoffeeB = b.Name, SimilarityScore = sim });
+    }
+}
+
+// ── Contact (IT Support) ──────────────────────────────────────────────────────
+[ApiController, Route("api/[controller]")]
+[AllowAnonymous]
+public class ContactController(IEmailService emailService) : ControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> Send(ContactRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name)    ||
+            string.IsNullOrWhiteSpace(req.Email)   ||
+            string.IsNullOrWhiteSpace(req.Subject) ||
+            string.IsNullOrWhiteSpace(req.Message))
+            return BadRequest("Name, email, subject, and message are required.");
+
+        if (!new EmailAddressAttribute().IsValid(req.Email))
+            return BadRequest("Invalid email address.");
+
+        await emailService.SendSupportNotificationAsync(req.Email, req.Name, req.Subject, req.Message);
+        return Ok();
+    }
+}
+
+// ── Newsletter ────────────────────────────────────────────────────────────────
+[ApiController, Route("api/[controller]")]
+[Authorize]
+public class NewsletterController(IEmailService emailService) : ControllerBase
+{
+    /// <summary>
+    /// Send a newsletter to the provided list of recipient emails.
+    /// Requires authentication. Protect this endpoint with an admin role when roles are added.
+    /// </summary>
+    [HttpPost("send")]
+    public async Task<IActionResult> Send(NewsletterRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Subject) || string.IsNullOrWhiteSpace(req.HtmlBody))
+            return BadRequest("Subject and HtmlBody are required.");
+
+        if (req.Recipients is null || req.Recipients.Count == 0)
+            return BadRequest("At least one recipient is required.");
+
+        var valid = req.Recipients
+            .Where(r => new EmailAddressAttribute().IsValid(r))
+            .ToList();
+
+        await emailService.SendNewsletterAsync(valid, req.Subject, req.HtmlBody);
+        return Ok(new { Sent = valid.Count, Skipped = req.Recipients.Count - valid.Count });
     }
 }

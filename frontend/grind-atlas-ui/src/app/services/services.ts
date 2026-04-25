@@ -6,9 +6,11 @@ import {
   AddGrindLogRequest, BrewMethod, ProcessingMethod,
   AuthUser, LoginRequest, RegisterRequest,
   BrewRecipe, CreateBrewRecipeRequest,
+  UserCoffee, UserGrinder, UserBrewMethod, CoffeeBag, OpenCoffeeBagRequest, FreshnessInfo,
+  AuditLogPage,
 } from '../models/models';
 
-const BASE = 'http://localhost:5000/api';
+const BASE = 'https://grindatlas.onrender.com/api';
 
 // ── Coffee Service ────────────────────────────────────────────────────────────
 @Injectable({ providedIn: 'root' })
@@ -91,8 +93,9 @@ export class AuthService {
   );
 
   readonly currentUser = this._user.asReadonly();
-  readonly isLoggedIn = computed(() => this._user() !== null);
-  readonly token = computed(() => this._user()?.token ?? null);
+  readonly isLoggedIn  = computed(() => this._user() !== null);
+  readonly isAdmin     = computed(() => this._user()?.isAdmin === true);
+  readonly token       = computed(() => this._user()?.token ?? null);
 
   login(req: LoginRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${BASE}/auth/login`, req).pipe(
@@ -143,6 +146,68 @@ export class RecipeService {
   }
 }
 
+// ── Collection Service ────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class CollectionService {
+  private http = inject(HttpClient);
+
+  // My Shelf — coffees
+  getShelf(): Observable<UserCoffee[]> {
+    return this.http.get<UserCoffee[]>(`${BASE}/collection/coffees`);
+  }
+
+  addToShelf(coffeeId: number): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/coffees/${coffeeId}`, {});
+  }
+
+  removeFromShelf(coffeeId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/coffees/${coffeeId}`);
+  }
+
+  // My Setup — grinders
+  getSetupGrinders(): Observable<UserGrinder[]> {
+    return this.http.get<UserGrinder[]>(`${BASE}/collection/grinders`);
+  }
+
+  addGrinderToSetup(grinderId: number): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/grinders/${grinderId}`, {});
+  }
+
+  removeGrinderFromSetup(grinderId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/grinders/${grinderId}`);
+  }
+
+  // My Setup — brew methods
+  getSetupBrewMethods(): Observable<UserBrewMethod[]> {
+    return this.http.get<UserBrewMethod[]>(`${BASE}/collection/brewmethods`);
+  }
+
+  addBrewMethodToSetup(method: BrewMethod): Observable<void> {
+    return this.http.post<void>(`${BASE}/collection/brewmethods/${method}`, {});
+  }
+
+  removeBrewMethodFromSetup(method: BrewMethod): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/brewmethods/${method}`);
+  }
+
+  // Bag Tracking
+  getBags(): Observable<CoffeeBag[]> {
+    return this.http.get<CoffeeBag[]>(`${BASE}/collection/bags`);
+  }
+
+  openBag(req: OpenCoffeeBagRequest): Observable<CoffeeBag> {
+    return this.http.post<CoffeeBag>(`${BASE}/collection/bags`, req);
+  }
+
+  closeBag(bagId: number): Observable<void> {
+    return this.http.delete<void>(`${BASE}/collection/bags/${bagId}`);
+  }
+
+  getBagFreshness(bagId: number): Observable<FreshnessInfo> {
+    return this.http.get<FreshnessInfo>(`${BASE}/collection/bags/${bagId}/freshness`);
+  }
+}
+
 // ── Grind Advisor Service ─────────────────────────────────────────────────────
 @Injectable({ providedIn: 'root' })
 export class GrindAdvisorService {
@@ -165,5 +230,31 @@ export class GrindAdvisorService {
     return this.http.post(`${BASE}/grind-advisor/estimate/${estimateId}/confirm`, {
       confirmedSetting,
     });
+  }
+}
+
+// ── Admin Service ──────────────────────────────────────────────────────────────
+@Injectable({ providedIn: 'root' })
+export class AdminService {
+  private http = inject(HttpClient);
+
+  getAuditLog(filters?: {
+    actor?: string;
+    action?: string;
+    entityType?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  }): Observable<AuditLogPage> {
+    let params = new HttpParams();
+    if (filters?.actor)      params = params.set('actor',      filters.actor);
+    if (filters?.action)     params = params.set('action',     filters.action);
+    if (filters?.entityType) params = params.set('entityType', filters.entityType);
+    if (filters?.from)       params = params.set('from',       filters.from);
+    if (filters?.to)         params = params.set('to',         filters.to);
+    if (filters?.page)       params = params.set('page',       filters.page);
+    if (filters?.pageSize)   params = params.set('pageSize',   filters.pageSize);
+    return this.http.get<AuditLogPage>(`${BASE}/admin/audit-log`, { params });
   }
 }

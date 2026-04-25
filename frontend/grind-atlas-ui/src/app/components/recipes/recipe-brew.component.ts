@@ -148,7 +148,7 @@ export const brewGuard: CanDeactivateFn<RecipeBrewComponent> = (component) => {
       </div>
 
       <!-- Brew complete + review form -->
-      <div *ngIf="isComplete" class="panel" style="margin-bottom:20px;">
+      <div *ngIf="isComplete && !saved" class="panel" style="margin-bottom:20px;">
         <div class="panel-head">
           <span class="panel-title">Brew Complete — {{ formatTime(elapsedTotal) }}</span>
         </div>
@@ -158,20 +158,20 @@ export const brewGuard: CanDeactivateFn<RecipeBrewComponent> = (component) => {
           </p>
           <div class="form-grid-3" style="margin-bottom:14px;">
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Dose (g)</label>
-              <input type="number" [(ngModel)]="review.doseG" step="0.1" placeholder="e.g. 15">
+              <label class="form-label" for="review-dose">Dose (g)</label>
+              <input id="review-dose" type="number" [(ngModel)]="review.doseG" step="0.1" placeholder="e.g. 15">
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Yield (g)</label>
-              <input type="number" [(ngModel)]="review.yieldG" step="0.1" placeholder="e.g. 250">
+              <label class="form-label" for="review-yield">Yield (g)</label>
+              <input id="review-yield" type="number" [(ngModel)]="review.yieldG" step="0.1" placeholder="e.g. 250">
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Extraction Time (s)</label>
-              <input type="number" [(ngModel)]="review.extractionTimeS" placeholder="e.g. 210">
+              <label class="form-label" for="review-time">Extraction Time (s)</label>
+              <input id="review-time" type="number" [(ngModel)]="review.extractionTimeS" placeholder="e.g. 210">
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">Rating (1–5)</label>
-              <select [(ngModel)]="review.rating">
+              <label class="form-label" for="review-rating">Rating (1–5)</label>
+              <select id="review-rating" [(ngModel)]="review.rating">
                 <option [ngValue]="undefined">—</option>
                 <option [ngValue]="1">1</option>
                 <option [ngValue]="2">2</option>
@@ -181,19 +181,60 @@ export const brewGuard: CanDeactivateFn<RecipeBrewComponent> = (component) => {
               </select>
             </div>
             <div class="form-group" style="margin-bottom:0; grid-column:span 2;">
-              <label class="form-label">Notes</label>
-              <input type="text" [(ngModel)]="review.notes" placeholder="Observations from this brew…">
+              <label class="form-label" for="review-notes">Notes</label>
+              <input id="review-notes" type="text" [(ngModel)]="review.notes" placeholder="Observations from this brew…">
             </div>
           </div>
 
+          <!-- Extraction Feedback Slider -->
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label" for="extraction-slider">
+              Extraction — {{ extractionLabel }}
+            </label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; color:#666; white-space:nowrap;">Under</span>
+              <input
+                id="extraction-slider"
+                type="range"
+                min="-3" max="3" step="1"
+                [(ngModel)]="review.extractionFeedback"
+                style="flex:1; accent-color:var(--ink);"
+                [attr.aria-valuetext]="extractionLabel">
+              <span style="font-size:11px; color:#666; white-space:nowrap;">Over</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:#999; margin-top:3px;">
+              <span>-3</span><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span>
+            </div>
+          </div>
+
+          <div *ngIf="saveError" role="alert" style="font-size:12px; color:#c00; margin-bottom:12px; border:1px solid #c00; padding:8px 12px;">
+            {{ saveError }}
+          </div>
+
           <div style="display:flex; gap:12px; align-items:center;">
-            <button class="btn btn-inv" (click)="saveReview()" [disabled]="!canSaveReview || saving">
+            <button class="btn btn-inv" (click)="saveReview()" [disabled]="!canSaveReview || saving" [attr.aria-busy]="saving">
               {{ saving ? 'Saving…' : 'Save Session' }}
             </button>
             <a routerLink="/recipes" class="btn btn-sm">Skip</a>
           </div>
-          <div *ngIf="!canSaveReview" style="font-size:11px; color:#999; margin-top:8px;">
+          <div *ngIf="!canSaveReview" style="font-size:11px; color:#999; margin-top:8px;" role="status">
             Fill in at least one field to save.
+          </div>
+        </div>
+      </div>
+
+      <!-- Save confirmation -->
+      <div *ngIf="saved" class="panel" style="margin-bottom:20px;" role="status" aria-live="polite">
+        <div class="panel-head">
+          <span class="panel-title">Session Saved</span>
+        </div>
+        <div class="panel-body">
+          <p style="margin:0 0 16px; font-size:13px; color:#555;">
+            Your brew session has been logged successfully.
+          </p>
+          <div style="display:flex; gap:12px;">
+            <a routerLink="/logs" class="btn btn-inv">View in Logs</a>
+            <a routerLink="/recipes" class="btn">Back to Recipes</a>
           </div>
         </div>
       </div>
@@ -223,8 +264,10 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
   get elapsedTotal(): number { return Math.floor(this.elapsedMs / 1000); }
 
   // Review form
-  review: { doseG?: number; yieldG?: number; extractionTimeS?: number; rating?: number; notes?: string } = {};
+  review: { doseG?: number; yieldG?: number; extractionTimeS?: number; rating?: number; extractionFeedback: number; notes?: string } = { extractionFeedback: 0 };
   saving = false;
+  saved = false;
+  saveError?: string;
 
   get stepRemaining(): number {
     const s = this.recipe?.steps[this.currentStepIndex];
@@ -242,10 +285,30 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
               this.review.rating || (this.review.notes && this.review.notes.trim()));
   }
 
+  get extractionLabel(): string {
+    const labels: Record<number, string> = {
+      '-3': 'Very Under-Extracted',
+      '-2': 'Under-Extracted',
+      '-1': 'Slightly Under',
+      '0': 'Balanced',
+      '1': 'Slightly Over',
+      '2': 'Over-Extracted',
+      '3': 'Very Over-Extracted',
+    };
+    return labels[this.review.extractionFeedback] ?? 'Balanced';
+  }
+
   ngOnInit() {
     const id = +this.route.snapshot.paramMap.get('id')!;
     this.recipeService.getById(id).subscribe(r => {
       this.recipe = r;
+      // Auto-prefill form fields from recipe
+      if (r.doseG != null) this.review.doseG = r.doseG;
+      if (r.waterG != null) this.review.yieldG = r.waterG;
+      if (r.steps?.length) {
+        const totalS = r.steps.reduce((sum, s) => sum + s.durationS, 0);
+        if (totalS > 0) this.review.extractionTimeS = totalS;
+      }
       if (r.grinderId) {
         this.grinderService.getById(r.grinderId).subscribe(g => this.grinder = g);
       }
@@ -316,21 +379,33 @@ export class RecipeBrewComponent implements OnInit, OnDestroy {
   saveReview() {
     if (!this.canSaveReview || !this.recipe || this.saving) return;
     this.saving = true;
+    this.saveError = undefined;
     const req: AddGrindLogRequest = {
-      coffeeId:        this.recipe.coffeeId,
-      grinderId:       this.recipe.grinderId,
-      brewMethod:      this.recipe.brewMethod,
-      nativeSetting:   this.recipe.nativeSetting ?? 0,
-      doseG:           this.review.doseG,
-      yieldG:          this.review.yieldG,
-      extractionTimeS: this.review.extractionTimeS,
-      rating:          this.review.rating,
-      notes:           this.review.notes?.trim() || undefined,
-      recipeId:        this.recipe.id,
+      coffeeId:           this.recipe.coffeeId,
+      grinderId:          this.recipe.grinderId,
+      brewMethod:         this.recipe.brewMethod,
+      nativeSetting:      this.recipe.nativeSetting ?? 0,
+      doseG:              this.review.doseG,
+      yieldG:             this.review.yieldG,
+      extractionTimeS:    this.review.extractionTimeS,
+      rating:             this.review.rating,
+      extractionFeedback: this.review.extractionFeedback !== 0 ? this.review.extractionFeedback : undefined,
+      notes:              this.review.notes?.trim() || undefined,
+      recipeId:           this.recipe.id,
     };
     this.logService.create(req).subscribe({
-      next:  () => this.router.navigate(['/logs']),
-      error: () => { this.saving = false; },
+      next: () => {
+        this.saving = false;
+        this.saved = true;
+      },
+      error: (err) => {
+        this.saving = false;
+        if (err.status === 409) {
+          this.saveError = err.error ?? 'A session for this recipe was already saved today.';
+        } else {
+          this.saveError = 'Failed to save session. Please try again.';
+        }
+      },
     });
   }
 
