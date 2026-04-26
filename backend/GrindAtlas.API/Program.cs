@@ -207,6 +207,15 @@ using (var scope = app.Services.CreateScope())
 
     SeedData.Seed(db);
 
+    // After explicit-ID seeding, advance the identity sequences so new inserts
+    // don't collide with the seeded rows.
+    db.Database.ExecuteSqlRaw("""
+        SELECT setval(pg_get_serial_sequence('"Coffees"',             'Id'), COALESCE((SELECT MAX("Id") FROM "Coffees"),             1));
+        SELECT setval(pg_get_serial_sequence('"Grinders"',            'Id'), COALESCE((SELECT MAX("Id") FROM "Grinders"),            1));
+        SELECT setval(pg_get_serial_sequence('"GrinderCalibrations"', 'Id'), COALESCE((SELECT MAX("Id") FROM "GrinderCalibrations"), 1));
+        SELECT setval(pg_get_serial_sequence('"GrindLogs"',           'Id'), COALESCE((SELECT MAX("Id") FROM "GrindLogs"),           1));
+        """);
+
     // ── Seed Admin Role & User ────────────────────────────────────────────────
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
